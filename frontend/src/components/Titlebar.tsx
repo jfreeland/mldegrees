@@ -1,4 +1,11 @@
+"use client";
+
+import { useSession, signIn, signOut } from "next-auth/react";
+import Link from "next/link";
+
 export default function Titlebar() {
+  const { data: session, status } = useSession();
+
   return (
     <header className="w-full bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -9,24 +16,40 @@ export default function Titlebar() {
             </h1>
           </div>
           <nav className="flex items-center space-x-8">
-            <a
+            <Link
               href="/"
               className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
             >
               Home
-            </a>
-            <a
+            </Link>
+            <Link
               href="/about"
               className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
             >
               About
-            </a>
-            <a
-              href="/contact"
-              className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
-            >
-              Contact
-            </a>
+            </Link>
+            {status === "loading" ? (
+              <span className="text-gray-600 dark:text-gray-300">Loading...</span>
+            ) : session ? (
+              <div className="flex items-center space-x-4">
+                <span className="text-gray-600 dark:text-gray-300">
+                  {session.user?.name || session.user?.email}
+                </span>
+                <button
+                  onClick={() => signOut()}
+                  className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                >
+                  Sign Out
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => signIn("google")}
+                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+              >
+                Sign In with Google
+              </button>
+            )}
           </nav>
         </div>
       </div>

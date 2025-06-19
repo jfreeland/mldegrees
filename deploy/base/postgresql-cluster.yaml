@@ -1,0 +1,21 @@
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: mld-db
+  namespace: mld
+  finalizers:
+    - do-not-delete
+spec:
+  instances: 2
+  superuserSecret:
+    name: mld-db-superuser
+  bootstrap:
+    initdb:
+      database: mld
+      owner: mld
+      secret:
+        name: mld-db-user
+  storage:
+    size: 1Gi
+    #storageClass: local-path

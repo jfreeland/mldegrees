@@ -1,0 +1,19 @@
+# .markdownlint.yaml
+# See: https://github.com/DavidAnson/markdownlint/blob/main/schema/.markdownlint.yaml
+##
+# Default state for all rules with a few changes below
+default: true
+
+# Path to configuration file to extend
+extends: null
+
+# MD013/line-length - Line length
+# Don't enforce this
+MD013: False
+
+# A lot of the auto-generated files feature in-line HTML so we allow it
+MD033: false
+
+# revisit these
+MD024: false
+MD025: false

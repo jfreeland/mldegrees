@@ -12,10 +12,11 @@
 
 ## Backend Commands (Go)
 
-- Run: `cd backend && go run cmd/api/main.go`
+- Run: `cd backend && DATABASE_URL='postgres://postgres:testing@localhost/mldegrees?sslmode=disable' go run cmd/api/main.go`
 - Build: `cd backend && go build -o bin/api cmd/api/main.go`
 - Test: `cd backend && go test ./...`
 - Test (single): `cd backend && go test ./path/to/package -run TestName`
+- Database setup: `cd backend && DATABASE_URL='postgres://postgres:testing@localhost/mldegrees?sslmode=disable' ./setup-db.sh`
 
 ## Code Style
 

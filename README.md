@@ -12,7 +12,7 @@ A website for [machinelearningdegrees.com](https://machinelearningdegrees.com) a
 ### Frontend
 
 ```bash
-cd ml-degrees-frontend
+cd frontend
 npm install
 next dev
 ```
@@ -24,6 +24,14 @@ The frontend will be available at [http://localhost:3000](http://localhost:3000)
 ```bash
 cd backend
 go run cmd/api/main.go
+```
+
+### Database
+
+```bash
+docker run -d --name postgres -e POSTGRES_PASSWORD=testing -p 5432:5432 postgres
+docker exec -it postgres  psql -U postgres
+CREATE DATABASE mldegrees;
 ```
 
 The API will be available at [http://localhost:8080](http://localhost:8080).
