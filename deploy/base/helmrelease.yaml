@@ -33,7 +33,7 @@ spec:
     backend:
       enabled: true
       image:
-        repository: docker.io/jfreeland/mldbe
+        repository: joeyfreeland/mldbe
         tag: latest
       env:
         - name: DATABASE_URL
@@ -47,7 +47,7 @@ spec:
     frontend:
       enabled: true
       image:
-        repository: docker.io/jfreeland/mldfe
+        repository: joeyfreeland/mldfe
         tag: latest
       env:
         - name: NODE_ENV
