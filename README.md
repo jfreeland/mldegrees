@@ -1,6 +1,8 @@
 # Machine Learning Degrees Website
 
-A website for [machinelearningdegrees.com](https://machinelearningdegrees.com) and [mldegrees.com](https://mldegrees.com) that helps people learn about machine learning degrees and find top programs.
+A website for [machinelearningdegrees.com](https://machinelearningdegrees.com)
+and [mldegrees.com](https://mldegrees.com) that helps people learn about
+machine learning degrees and find top programs.
 
 ## Project Structure
 

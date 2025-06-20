@@ -1,80 +1,210 @@
-# ML Degrees Application Requirements
+# ML Degrees Application - Current Requirements
 
-## Requirement Template
-
-```markdown
-# [Requirement Name]
-**Priority:** High/Medium/Low
-**Components:** Frontend/Backend/Database/Infrastructure
-**User Story:** As a [user], I want [goal] so that [benefit]
-
-## Description
-[Detailed explanation of what needs to be built]
-
-## Technical Requirements
-- [Specific constraints/technologies]
-- [API endpoints needed]
-- [Database changes required]
-- [UI/UX requirements]
-
-## Acceptance Criteria
-- [ ] [Testable condition 1]
-- [ ] [Testable condition 2]
-- [ ] [Testable condition 3]
-
-## Dependencies
-- [Other requirements this depends on]
-- [External services/APIs needed]
-
-## Notes
-- [Additional context, edge cases, or considerations]
-```
+Based on the existing implementation, here are the current requirements that have been built:
 
 ---
 
-## Example Requirement
+# Core Application Infrastructure
 
-# University Search and Filtering
+**Priority:** High
+**Components:** Frontend, Backend, Database, Infrastructure
+**User Story:** As a developer, I want a scalable web application infrastructure so that I can build and deploy ML degree comparison features.
+
+## Description
+
+Full-stack web application with Next.js frontend, Go backend API, PostgreSQL database, and Kubernetes deployment configuration.
+
+## Technical Requirements
+
+- Next.js 14+ frontend with TypeScript
+- Go backend API with clean architecture
+- PostgreSQL database with migrations
+- Docker containerization
+- Kubernetes deployment manifests
+- Authentication via NextAuth with Google OAuth
+
+## Acceptance Criteria
+
+- [x] Frontend runs on localhost:3000
+- [x] Backend API runs on localhost:8080
+- [x] Database migrations create required tables
+- [x] Docker builds work for both services
+- [x] K8s manifests deploy successfully
+- [x] Google OAuth authentication works
+
+---
+
+# University and Program Data Management
+
+**Priority:** High
+**Components:** Backend, Database
+**User Story:** As a system administrator, I want to manage university and program data so that users can browse available ML degree programs.
+
+## Description
+
+Database schema and API endpoints for managing universities and their ML programs, including seeded data for major institutions.
+
+## Technical Requirements
+
+- Universities table with basic info
+- Programs table linked to universities
+- Seed data for 5+ major universities
+- API endpoint: `GET /api/programs`
+- Program descriptions and metadata
+
+## Acceptance Criteria
+
+- [x] Database stores universities and programs
+- [x] Seed data includes Stanford, MIT, CMU, Berkeley, Toronto
+- [x] API returns programs with university names
+- [x] Programs include detailed descriptions
+- [x] Data model supports future expansion
+
+---
+
+# User Authentication System
 
 **Priority:** High
 **Components:** Frontend, Backend, Database
-**User Story:** As a prospective student, I want to search and filter universities by various criteria so that I can find programs that match my interests and qualifications.
+**User Story:** As a user, I want to sign in with Google so that I can vote on programs and have my preferences saved.
 
 ## Description
 
-Implement a comprehensive search system that allows users to find universities based on multiple criteria including location, program type, ranking, tuition costs, and admission requirements.
+Complete authentication system using Google OAuth, with user management and session handling.
 
 ## Technical Requirements
 
-- Search API endpoint: `GET /api/universities/search?q=query&filters=...`
-- Database indexes on searchable fields
-- Frontend search component with real-time filtering
-- Pagination for large result sets
-- Sort options (ranking, tuition, alphabetical)
+- NextAuth.js integration with Google provider
+- User table in database
+- JWT token handling
+- Protected API endpoints
+- User session management in frontend
 
 ## Acceptance Criteria
 
-- [ ] Users can search by university name or program
-- [ ] Filter by location (state, region, international)
-- [ ] Filter by program type (undergraduate, graduate, PhD)
-- [ ] Filter by tuition range
-- [ ] Results update in real-time as filters change
-- [ ] Search results are paginated (20 per page)
-- [ ] Search performance under 500ms for typical queries
-
-## Dependencies
-
-- University data model must be expanded
-- Search indexing infrastructure
-
-## Notes
-
-- Consider using full-text search capabilities
-- May need to implement search result caching for performance
-- Should handle typos and partial matches
+- [x] Users can sign in with Google
+- [x] User data stored in database
+- [x] Sessions persist across page refreshes
+- [x] API endpoints validate authentication
+- [x] Sign out functionality works
 
 ---
 
-## Your Requirements
+# Program Voting System
 
-Add your new requirements below this line, following the template above:
+**Priority:** High
+**Components:** Frontend, Backend, Database
+**User Story:** As a prospective student, I want to vote on ML programs so that I can help others understand program quality and see community ratings.
+
+## Description
+
+Voting system where authenticated users can upvote/downvote programs, with real-time rating calculations and optimistic UI updates.
+
+## Technical Requirements
+
+- Vote table linking users to programs
+- API endpoint: `POST /api/vote`
+- Real-time rating calculations
+- Optimistic UI updates
+- Vote change/removal functionality
+
+## Acceptance Criteria
+
+- [x] Authenticated users can vote (+1/-1)
+- [x] Users can change or remove votes
+- [x] Ratings update in real-time
+- [x] UI shows current user's vote state
+- [x] Vote counts aggregate correctly
+- [x] Optimistic updates with error rollback
+
+---
+
+# Program Display and Browsing
+
+**Priority:** High
+**Components:** Frontend
+**User Story:** As a prospective student, I want to browse ML programs in an organized way so that I can compare options and make informed decisions.
+
+## Description
+
+Clean, responsive interface for displaying ML programs with ratings, descriptions, and voting controls.
+
+## Technical Requirements
+
+- UniversityCard component for program display
+- Responsive grid layout
+- Dark/light mode support
+- Loading and error states
+- Vote buttons with visual feedback
+
+## Acceptance Criteria
+
+- [x] Programs display in card format
+- [x] Shows university name, program name, description
+- [x] Displays current rating and user's vote
+- [x] Responsive design works on mobile
+- [x] Loading states during data fetch
+- [x] Error handling for failed requests
+
+---
+
+# Development and Deployment Infrastructure
+
+**Priority:** Medium
+**Components:** Infrastructure
+**User Story:** As a developer, I want proper development tooling and deployment processes so that I can efficiently build and deploy the application.
+
+## Description
+
+Complete development environment setup with testing, linting, building, and deployment configurations.
+
+## Technical Requirements
+
+- Frontend: npm scripts for dev, build, test, lint
+- Backend: Go build and test commands
+- Database setup scripts
+- Docker multi-stage builds
+- Kubernetes HPA and ingress
+- Development documentation
+
+## Acceptance Criteria
+
+- [x] Local development environment documented
+- [x] Test suites configured (Jest for frontend)
+- [x] Linting and type checking setup
+- [x] Build processes work reliably
+- [x] Database setup automated
+- [x] K8s includes autoscaling and ingress
+
+---
+
+## Notes for Future Development
+
+### Current Limitations
+
+- No search or filtering functionality
+- No program categories or tags
+- No detailed program information pages
+- No user profiles or preferences
+- No admin interface for data management
+- No analytics or usage tracking
+
+### Technical Debt
+
+- Frontend TypeScript diagnostics need cleanup
+- Error handling could be more robust
+- API rate limiting not implemented
+- Database indexes for performance not optimized
+- No caching layer implemented
+
+### Architecture Decisions Made
+
+- Monolithic frontend/backend separation
+- PostgreSQL for primary data storage
+- Google OAuth as only auth provider
+- Simple voting system (no complex algorithms)
+- Kubernetes-first deployment strategy
+
+---
+
+*Add your new requirements below this section, following the same format.*
