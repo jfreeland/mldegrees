@@ -86,20 +86,20 @@ spec:
           pathType: ImplementationSpecific
           backend:
             service:
-              name: frontend-service
+              name: mld-frontend
               port:
                 number: 80
         - path: /(api/.*)
           pathType: ImplementationSpecific
           backend:
             service:
-              name: backend-service
+              name: mld-backend
               port:
                 number: 8080
         - path: /(.*)
           pathType: ImplementationSpecific
           backend:
             service:
-              name: frontend-service
+              name: mld-frontend
               port:
                 number: 80
