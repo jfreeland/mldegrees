@@ -25,7 +25,7 @@ jobs:
           node-version: "20"
 
       - name: install semantic-release
-        run: npm install -g semantic-release @semantic-release/commit-analyzer @semantic-release/release-notes-generator @semantic-release/github
+        run: npm install -g semantic-release @semantic-release/commit-analyzer @semantic-release/release-notes-generator @semantic-release/github @semantic-release/git
 
       - name: semantic release
         env:
