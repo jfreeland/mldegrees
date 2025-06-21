@@ -34,14 +34,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: semantic-release
-
-      - name: get next version from git tag
-        id: version
-        run: |
-          git fetch --tags
-          VERSION=$(git describe --tags --abbrev=0)
-          echo "[DEBUG] Next release version: $VERSION"
-          echo "tag=$VERSION" >> $GITHUB_OUTPUT
+        continue-on-error: true
 
       - name: setup buildx
         uses: docker/setup-buildx-action@v3
@@ -53,38 +46,40 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: build and push backend
-        id: build_be
+        if: steps.semantic.outputs.new_release_published == 'true'
         uses: docker/build-push-action@v5
         with:
           context: ./backend/
           push: true
           tags: |
-            ${{ secrets.DOCKER_USERNAME }}/mldbe:${{ steps.version.outputs.tag }}
+            ${{ secrets.DOCKER_USERNAME }}/mldbe:${{ steps.semantic.outputs.new_release_version }}
 
       - name: build and push frontend
-        id: build_fe
+        if: steps.semantic.outputs.new_release_published == 'true'
         uses: docker/build-push-action@v5
         with:
           context: ./frontend/
           push: true
           tags: |
-            ${{ secrets.DOCKER_USERNAME }}/mldfe:${{ steps.version.outputs.tag }}
+            ${{ secrets.DOCKER_USERNAME }}/mldfe:${{ steps.semantic.outputs.new_release_version }}
 
       - name: setup yq
         uses: mikefarah/yq@v4.44.2
 
       - name: update helmrelease
+        if: steps.semantic.outputs.new_release_published == 'true'
         run: |
           set -ex
-          TAG=${{ steps.version.outputs.tag }}
+          TAG=${{ steps.semantic.outputs.new_release_version }}
           yq -i ".spec.values.backend.image.tag = \"$TAG\"" deploy/base/helmrelease.yaml
           yq -i ".spec.values.frontend.image.tag = \"$TAG\"" deploy/base/helmrelease.yaml
 
       - name: commit helmrelease
+        if: steps.semantic.outputs.new_release_published == 'true'
         run: |
           set -ex
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add deploy/base/helmrelease.yaml
-          git commit -m "ci: update helmrelease to ${{ steps.version.outputs.tag }}"
+          git commit -m "ci: update helmrelease to ${{ steps.semantic.outputs.new_release_version }}"
           git push
