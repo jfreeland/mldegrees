@@ -14,6 +14,13 @@ spec:
     branch: main
   secretRef:
     name: github
+  values:
+    backend:
+      image:
+        tag: v1.0.2
+    frontend:
+      image:
+        tag: v1.0.2
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2beta2
 kind: HelmRelease
@@ -34,7 +41,7 @@ spec:
       enabled: true
       image:
         repository: joeyfreeland/mldbe
-        tag: latest
+        tag: v1.0.2
       env:
         - name: DATABASE_URL
           valueFrom:
@@ -43,12 +50,11 @@ spec:
               key: database-url
         - name: PORT
           value: "8080"
-
     frontend:
       enabled: true
       image:
         repository: joeyfreeland/mldfe
-        tag: latest
+        tag: v1.0.2
       env:
         - name: NODE_ENV
           value: "production"
@@ -71,7 +77,6 @@ spec:
             secretKeyRef:
               name: frontend-secrets
               key: auth-secret
-
     ingress:
       enabled: true
       className: "cloudflare-tunnel-f6d"
