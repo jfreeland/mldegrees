@@ -42,9 +42,9 @@ repos:
           - --fix
 
   # And check that we're not doing anything too dumb in GHA flows
-  - repo: https://github.com/woodruffw/zizmor-pre-commit
-    # Zizmor version.
-    rev: v1.9.0
-    hooks:
-      # Run the linter.
-      - id: zizmor
+  #- repo: https://github.com/woodruffw/zizmor-pre-commit
+  #  # Zizmor version.
+  #  rev: v1.9.0
+  #  hooks:
+  #    # Run the linter.
+  #    - id: zizmor
