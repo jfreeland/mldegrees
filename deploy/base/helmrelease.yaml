@@ -18,7 +18,7 @@ spec:
       enabled: true
       image:
         repository: joeyfreeland/mldbe
-        tag: v1.0.2
+        tag: 1.0.4
       env:
         - name: DATABASE_URL
           valueFrom:
@@ -31,7 +31,7 @@ spec:
       enabled: true
       image:
         repository: joeyfreeland/mldfe
-        tag: v1.0.2
+        tag: 1.0.4
       env:
         - name: NODE_ENV
           value: "production"
