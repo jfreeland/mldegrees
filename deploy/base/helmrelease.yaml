@@ -1,26 +1,3 @@
-# TODO: change all my flux times to a lot slower
----
-# TODO: Should really make a proper Helm repository instead of using a
-# GitRepository here but this is fine.
-apiVersion: source.toolkit.fluxcd.io/v1
-kind: GitRepository
-metadata:
-  name: jf-helm
-  namespace: mld
-spec:
-  interval: 1m0s
-  url: https://github.com/jfreeland/helm
-  ref:
-    branch: main
-  secretRef:
-    name: github
-  values:
-    backend:
-      image:
-        tag: v1.0.2
-    frontend:
-      image:
-        tag: v1.0.2
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2beta2
 kind: HelmRelease
