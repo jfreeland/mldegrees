@@ -33,7 +33,17 @@ jobs:
         id: semantic
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: semantic-release
+        run: |
+          set -o pipefail
+          output=$(semantic-release)
+          echo "$output"
+          if echo "$output" | grep -q "Published release"; then
+            echo "new_release_published=true" >> $GITHUB_OUTPUT
+            version=$(echo "$output" | grep "Published release" | sed -E 's/.*Published release ([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
+            echo "new_release_version=$version" >> $GITHUB_OUTPUT
+          else
+            echo "new_release_published=false" >> $GITHUB_OUTPUT
+          fi
         continue-on-error: true
 
       - name: setup buildx
