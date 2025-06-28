@@ -3,6 +3,12 @@ export interface University {
   name: string;
   programName: string;
   description: string;
+  degreeType: string;
+  country: string;
+  city: string;
+  state?: string;
+  status: string;
+  visibility: string;
   rating: number;
   userVote?: 1 | -1 | null;
 }

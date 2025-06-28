@@ -203,3 +203,88 @@ Full-stack web application with Next.js frontend, Go backend API, PostgreSQL dat
 - [x] A "admin" can login locally
 
 ---
+
+# Extended Program Information and Filtering and Sorting
+
+**Completed:** December 28, 2024
+**Priority:** High
+**Components:** Frontend, Backend, Database
+**User Story:** As a user, I want to collect additional information about programs and filter/sort them.
+
+## Description
+
+Added comprehensive metadata tracking for ML programs including degree type, location information, and program status. Implemented filtering and sorting functionality to help users find programs that match their criteria.
+
+## Implementation Details
+
+### Database Schema (Migration 004)
+
+- Added new fields to the `programs` table:
+  - `degree_type` (VARCHAR(50), default 'masters') - bachelors, masters, certificate
+  - `country` (VARCHAR(100), default 'United States', required)
+  - `city` (VARCHAR(100), required)
+  - `state` (VARCHAR(100), optional)
+  - `status` (VARCHAR(20), default 'active') - active, inactive
+  - `visibility` (VARCHAR(20), default 'pending') - approved, pending, rejected
+- Added indexes for efficient filtering on all new fields
+- Updated the `program_ratings` view to include new metadata fields
+
+### Backend Changes
+
+- Updated `Program` model in `internal/models/models.go` to include new fields
+- Added `ProgramFilters` struct for filtering options with support for:
+  - Degree type filtering
+  - Country, city, and state filtering
+  - Sorting by rating, name, or creation date
+  - Ascending/descending sort order
+- Enhanced `GetProgramsWithFilters` function with dynamic SQL query building
+- Updated API handler to parse query parameters for filtering
+- **Default behavior:** Only returns programs with `status='active'` and `visibility='approved'`
+
+### Frontend Changes
+
+- Updated `University` interface in `types/university.ts` to include new metadata fields
+- Added comprehensive filtering UI with:
+  - Degree type dropdown (Bachelor's, Master's, Certificate)
+  - Country, city, and state text inputs
+  - Sort by options (Rating, Name, Date Added)
+  - Sort order selection (Ascending/Descending)
+  - Clear filters button to reset all filters
+- Enhanced `UniversityCard` component to display:
+  - Degree type badge (blue styling)
+  - Location badge showing "City, State, Country" (green styling)
+- Updated mock data to include realistic values for new fields
+- Implemented real-time filtering with automatic API calls when filters change
+
+### API Endpoints
+
+- `GET /api/programs` - Returns all approved/active programs
+- `GET /api/programs?degree_type=masters&country=United%20States&sort_by=rating&sort_order=desc` - Filtered results
+
+### Technical Features
+
+- **Performance:** Added database indexes for efficient filtering
+- **Security:** Input validation and SQL injection prevention through parameterized queries
+- **UX:** Real-time filtering without page refresh
+- **Responsive:** Filter UI adapts to different screen sizes
+- **Accessibility:** Proper labels and semantic HTML for form controls
+
+### Files Modified
+
+- `backend/migrations/004_add_program_metadata.sql` (new)
+- `backend/internal/models/models.go`
+- `backend/internal/db/db.go`
+- `backend/internal/handlers/handlers.go`
+- `frontend/src/types/university.ts`
+- `frontend/src/app/page.tsx`
+- `frontend/src/components/UniversityCard.tsx`
+- `frontend/src/mocks/universities.ts`
+
+## Acceptance Criteria Met
+
+- [x] The database supports the additional metadata for each program
+- [x] The frontend supports the additional metadata for each program
+- [x] The user can filter and sort the programs by these additional fields in the frontend
+- [x] The backend API only returns approved visibility and status active programs by default
+
+---

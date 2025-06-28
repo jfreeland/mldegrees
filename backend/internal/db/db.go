@@ -31,22 +31,94 @@ func (db *DB) Close() error {
 
 // GetPrograms returns all programs with their ratings and optionally user votes
 func (db *DB) GetPrograms(userID *int) ([]models.Program, error) {
-	query := `
+	return db.GetProgramsWithFilters(userID, nil)
+}
+
+// GetProgramsWithFilters returns programs with filtering and sorting options
+func (db *DB) GetProgramsWithFilters(userID *int, filters *models.ProgramFilters) ([]models.Program, error) {
+	baseQuery := `
 		SELECT
 			p.id,
 			p.university_id,
 			p.name,
 			p.description,
+			p.degree_type,
+			p.country,
+			p.city,
+			p.state,
+			p.status,
+			p.visibility,
+			p.created_at,
+			p.updated_at,
 			u.name as university_name,
 			COALESCE(SUM(v.vote), 0) as rating
 		FROM programs p
 		JOIN universities u ON p.university_id = u.id
 		LEFT JOIN votes v ON p.id = v.program_id
-		GROUP BY p.id, p.university_id, p.name, p.description, u.name
-		ORDER BY rating DESC, p.id
-	`
+		WHERE p.status = 'active' AND p.visibility = 'approved'`
 
-	rows, err := db.Query(query)
+	var whereConditions []string
+	var args []interface{}
+	argIndex := 1
+
+	// Add filtering conditions
+	if filters != nil {
+		if filters.DegreeType != "" {
+			whereConditions = append(whereConditions, fmt.Sprintf("AND p.degree_type = $%d", argIndex))
+			args = append(args, filters.DegreeType)
+			argIndex++
+		}
+		if filters.Country != "" {
+			whereConditions = append(whereConditions, fmt.Sprintf("AND p.country = $%d", argIndex))
+			args = append(args, filters.Country)
+			argIndex++
+		}
+		if filters.City != "" {
+			whereConditions = append(whereConditions, fmt.Sprintf("AND p.city = $%d", argIndex))
+			args = append(args, filters.City)
+			argIndex++
+		}
+		if filters.State != "" {
+			whereConditions = append(whereConditions, fmt.Sprintf("AND p.state = $%d", argIndex))
+			args = append(args, filters.State)
+			argIndex++
+		}
+	}
+
+	// Add WHERE conditions to query
+	for _, condition := range whereConditions {
+		baseQuery += " " + condition
+	}
+
+	// Add GROUP BY
+	baseQuery += `
+		GROUP BY p.id, p.university_id, p.name, p.description, p.degree_type, p.country, p.city, p.state, p.status, p.visibility, p.created_at, p.updated_at, u.name`
+
+	// Add ORDER BY
+	orderBy := "rating DESC, p.id"
+	if filters != nil && filters.SortBy != "" {
+		switch filters.SortBy {
+		case "name":
+			orderBy = "p.name"
+		case "created_at":
+			orderBy = "p.created_at"
+		case "rating":
+			orderBy = "rating"
+		default:
+			orderBy = "rating"
+		}
+
+		if filters.SortOrder == "asc" {
+			orderBy += " ASC"
+		} else {
+			orderBy += " DESC"
+		}
+		orderBy += ", p.id"
+	}
+
+	baseQuery += " ORDER BY " + orderBy
+
+	rows, err := db.Query(baseQuery, args...)
 	if err != nil {
 		return nil, fmt.Errorf("querying programs: %w", err)
 	}
@@ -55,9 +127,14 @@ func (db *DB) GetPrograms(userID *int) ([]models.Program, error) {
 	var programs []models.Program
 	for rows.Next() {
 		var p models.Program
-		err := rows.Scan(&p.ID, &p.UniversityID, &p.Name, &p.Description, &p.UniversityName, &p.Rating)
+		var state sql.NullString
+		err := rows.Scan(&p.ID, &p.UniversityID, &p.Name, &p.Description, &p.DegreeType, &p.Country, &p.City, &state, &p.Status, &p.Visibility, &p.CreatedAt, &p.UpdatedAt, &p.UniversityName, &p.Rating)
 		if err != nil {
 			return nil, fmt.Errorf("scanning program: %w", err)
+		}
+
+		if state.Valid {
+			p.State = &state.String
 		}
 
 		// Get user's vote if userID is provided

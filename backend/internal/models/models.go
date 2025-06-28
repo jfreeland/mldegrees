@@ -25,6 +25,12 @@ type Program struct {
 	UniversityID   int       `json:"university_id"`
 	Name           string    `json:"name"`
 	Description    string    `json:"description"`
+	DegreeType     string    `json:"degree_type"`
+	Country        string    `json:"country"`
+	City           string    `json:"city"`
+	State          *string   `json:"state,omitempty"`
+	Status         string    `json:"status"`
+	Visibility     string    `json:"visibility"`
 	CreatedAt      time.Time `json:"created_at"`
 	UpdatedAt      time.Time `json:"updated_at"`
 	UniversityName string    `json:"university_name,omitempty"`
@@ -44,4 +50,13 @@ type Vote struct {
 type VoteRequest struct {
 	ProgramID int `json:"program_id"`
 	Vote      int `json:"vote"`
+}
+
+type ProgramFilters struct {
+	DegreeType string `json:"degree_type"`
+	Country    string `json:"country"`
+	City       string `json:"city"`
+	State      string `json:"state"`
+	SortBy     string `json:"sort_by"` // "rating", "name", "created_at"
+	SortOrder  string `json:"sort_order"` // "asc", "desc"
 }

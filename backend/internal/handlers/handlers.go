@@ -24,8 +24,18 @@ func HandlePrograms(database *db.DB) http.HandlerFunc {
 			userID = &user.ID
 		}
 
-		// Get programs
-		programs, err := database.GetPrograms(userID)
+		// Parse query parameters for filtering
+		filters := &models.ProgramFilters{
+			DegreeType: r.URL.Query().Get("degree_type"),
+			Country:    r.URL.Query().Get("country"),
+			City:       r.URL.Query().Get("city"),
+			State:      r.URL.Query().Get("state"),
+			SortBy:     r.URL.Query().Get("sort_by"),
+			SortOrder:  r.URL.Query().Get("sort_order"),
+		}
+
+		// Get programs with filters
+		programs, err := database.GetProgramsWithFilters(userID, filters)
 		if err != nil {
 			http.Error(w, "Failed to get programs", http.StatusInternalServerError)
 			return

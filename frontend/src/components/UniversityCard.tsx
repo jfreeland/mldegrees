@@ -86,9 +86,17 @@ export default function UniversityCard({
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">
           {university.name}
         </h2>
-        <h3 className="text-lg text-gray-700 dark:text-gray-300 mb-3">
+        <h3 className="text-lg text-gray-700 dark:text-gray-300 mb-2">
           {university.programName}
         </h3>
+        <div className="flex flex-wrap gap-2 mb-3">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+            {university.degreeType}
+          </span>
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+            {university.city}, {university.state ? `${university.state}, ` : ''}{university.country}
+          </span>
+        </div>
         <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
           {university.description}
         </p>

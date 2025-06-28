@@ -11,25 +11,14 @@ if [ -z "$DATABASE_URL" ]; then
     exit 1
 fi
 
-# Run migrations
-echo "Running migrations..."
-psql $DATABASE_URL < migrations/001_initial_schema.sql
+# Run complete schema migration
+echo "Creating database schema..."
+psql $DATABASE_URL < migrations/001_complete_schema.sql
 
 if [ $? -eq 0 ]; then
     echo "✓ Schema created successfully"
 else
     echo "✗ Failed to create schema"
-    exit 1
-fi
-
-# Run user roles migration
-echo "Adding user roles..."
-psql $DATABASE_URL < migrations/003_add_user_roles.sql
-
-if [ $? -eq 0 ]; then
-    echo "✓ User roles added successfully"
-else
-    echo "✗ Failed to add user roles"
     exit 1
 fi
 
@@ -45,3 +34,10 @@ else
 fi
 
 echo "Database setup complete!"
+echo ""
+echo "The database now includes:"
+echo "- Users table with role support"
+echo "- Universities and programs with full metadata"
+echo "- Voting system"
+echo "- Filtering and sorting indexes"
+echo "- Sample data for 5 universities with approved programs"

@@ -5,11 +5,28 @@ import { useSession } from "next-auth/react";
 import UniversityCard from "@/components/UniversityCard";
 import { University } from "@/types/university";
 
+interface Filters {
+  degreeType: string;
+  country: string;
+  city: string;
+  state: string;
+  sortBy: string;
+  sortOrder: string;
+}
+
 export default function Home() {
   const { data: session } = useSession();
   const [universities, setUniversities] = useState<University[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [filters, setFilters] = useState<Filters>({
+    degreeType: '',
+    country: '',
+    city: '',
+    state: '',
+    sortBy: 'rating',
+    sortOrder: 'desc'
+  });
 
   const fetchUniversities = useCallback(async () => {
     try {
@@ -22,7 +39,17 @@ export default function Home() {
         headers['Authorization'] = `Bearer ${(session.user as any).googleId}`;
       }
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/programs`, {
+      // Build query parameters
+      const queryParams = new URLSearchParams();
+      if (filters.degreeType) queryParams.append('degree_type', filters.degreeType);
+      if (filters.country) queryParams.append('country', filters.country);
+      if (filters.city) queryParams.append('city', filters.city);
+      if (filters.state) queryParams.append('state', filters.state);
+      if (filters.sortBy) queryParams.append('sort_by', filters.sortBy);
+      if (filters.sortOrder) queryParams.append('sort_order', filters.sortOrder);
+
+      const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/programs${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+      const response = await fetch(url, {
         headers,
       });
 
@@ -38,6 +65,12 @@ export default function Home() {
         name: program.university_name,
         programName: program.name,
         description: program.description,
+        degreeType: program.degree_type,
+        country: program.country,
+        city: program.city,
+        state: program.state,
+        status: program.status,
+        visibility: program.visibility,
         rating: program.rating,
         userVote: program.user_vote || null,
       }));
@@ -49,7 +82,7 @@ export default function Home() {
       setError("Failed to load universities");
       setLoading(false);
     }
-  }, [session]);
+  }, [session, filters]);
 
   useEffect(() => {
     fetchUniversities();
@@ -143,6 +176,113 @@ export default function Home() {
           </p>
         </div>
       )}
+
+      {/* Filters */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Filter & Sort</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Degree Type
+            </label>
+            <select
+              value={filters.degreeType}
+              onChange={(e) => setFilters(prev => ({ ...prev, degreeType: e.target.value }))}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            >
+              <option value="">All Types</option>
+              <option value="bachelors">Bachelor's</option>
+              <option value="masters">Master's</option>
+              <option value="certificate">Certificate</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Country
+            </label>
+            <input
+              type="text"
+              value={filters.country}
+              onChange={(e) => setFilters(prev => ({ ...prev, country: e.target.value }))}
+              placeholder="e.g., United States"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              City
+            </label>
+            <input
+              type="text"
+              value={filters.city}
+              onChange={(e) => setFilters(prev => ({ ...prev, city: e.target.value }))}
+              placeholder="e.g., Boston"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              State
+            </label>
+            <input
+              type="text"
+              value={filters.state}
+              onChange={(e) => setFilters(prev => ({ ...prev, state: e.target.value }))}
+              placeholder="e.g., MA"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Sort By
+            </label>
+            <select
+              value={filters.sortBy}
+              onChange={(e) => setFilters(prev => ({ ...prev, sortBy: e.target.value }))}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            >
+              <option value="rating">Rating</option>
+              <option value="name">Name</option>
+              <option value="created_at">Date Added</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Order
+            </label>
+            <select
+              value={filters.sortOrder}
+              onChange={(e) => setFilters(prev => ({ ...prev, sortOrder: e.target.value }))}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            >
+              <option value="desc">Descending</option>
+              <option value="asc">Ascending</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="mt-4">
+          <button
+            onClick={() => setFilters({
+              degreeType: '',
+              country: '',
+              city: '',
+              state: '',
+              sortBy: 'rating',
+              sortOrder: 'desc'
+            })}
+            className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-md transition-colors"
+          >
+            Clear Filters
+          </button>
+        </div>
+      </div>
+
       <div className="space-y-6">
         {universities.map(university => (
           <UniversityCard
