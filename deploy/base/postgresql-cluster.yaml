@@ -19,3 +19,28 @@ spec:
   storage:
     size: 1Gi
     #storageClass: local-path
+  backup:
+    barmanObjectStore:
+      destinationPath: "s3://mld-rds-backups/mld-db"
+      s3Credentials:
+        accessKeyId:
+          name: aws-keys
+          key: aws_access_key_id
+        secretAccessKey:
+          name: aws-keys
+          key: aws_secret_access_key
+      wal:
+        compression: bzip2
+        maxParallel: 8
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: mld-db-backup
+  namespace: mld
+spec:
+  schedule: "@weekly"
+  immediate: true
+  backupOwnerReference: self
+  cluster:
+    name: mld-db

@@ -2,9 +2,8 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: mld
 resources:
+  - 1password.yaml
   - gitrepository.yaml
   - helmrelease.yaml
   - postgresql-cluster.yaml
   - s3-bucket.yaml
-  - sealedsecret-db-superuser.yaml
-  - sealedsecret-db-user.yaml
