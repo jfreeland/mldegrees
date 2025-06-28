@@ -5,6 +5,6 @@ metadata:
   generateName: mld-rds-backups-
 spec:
   forProvider:
-    region: us-east-1
+    locationConstraint: us-east-1
   providerConfigRef:
     name: f6d-playground
