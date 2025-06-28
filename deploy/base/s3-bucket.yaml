@@ -8,3 +8,6 @@ spec:
     locationConstraint: us-east-1
   providerConfigRef:
     name: f6d-playground
+  writeConnectionSecretToRef:
+    name: mld-rds-backups
+    namespace: mld
