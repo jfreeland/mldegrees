@@ -83,7 +83,7 @@ export default function Home() {
             newUserVote = vote;
           }
 
-          return { ...uni, userVote: newUserVote, rating: uni.rating + ratingChange };
+          return { ...uni, userVote: newUserVote, rating: (uni.rating || 0) + ratingChange };
         }
         return uni;
       })

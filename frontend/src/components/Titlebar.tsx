@@ -34,6 +34,11 @@ export default function Titlebar() {
               <div className="flex items-center space-x-4">
                 <span className="text-gray-600 dark:text-gray-300">
                   {session.user?.name || session.user?.email}
+                  {(session.user as any)?.role && (
+                    <span className="ml-2 px-2 py-1 text-xs bg-gray-200 dark:bg-gray-700 rounded">
+                      {(session.user as any).role}
+                    </span>
+                  )}
                 </span>
                 <button
                   onClick={() => signOut()}
@@ -43,12 +48,30 @@ export default function Titlebar() {
                 </button>
               </div>
             ) : (
-              <button
-                onClick={() => signIn("google")}
-                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
-              >
-                Sign In with Google
-              </button>
+              <div className="flex items-center space-x-2">
+                {process.env.NODE_ENV === 'development' && (
+                  <>
+                    <button
+                      onClick={() => signIn("local-user")}
+                      className="bg-green-600 text-white px-3 py-2 rounded-md hover:bg-green-700 transition-colors text-sm"
+                    >
+                      Sign In (User)
+                    </button>
+                    <button
+                      onClick={() => signIn("local-admin")}
+                      className="bg-purple-600 text-white px-3 py-2 rounded-md hover:bg-purple-700 transition-colors text-sm"
+                    >
+                      Sign In (Admin)
+                    </button>
+                  </>
+                )}
+                <button
+                  onClick={() => signIn("google")}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  Sign In with Google
+                </button>
+              </div>
             )}
           </nav>
         </div>

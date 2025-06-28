@@ -182,3 +182,24 @@ Complete development environment setup with testing, linting, building, and depl
 - [x] K8s includes autoscaling and ingress
 
 ---
+
+# Local Development
+
+**Priority:** Critical
+**Components:** Frontend, Backend, Database
+**User Story:** As a developer, I need to be able to login as a 'user' and an 'admin' for local development.
+
+## Description
+
+Full-stack web application with Next.js frontend, Go backend API, PostgreSQL database, and Kubernetes deployment configuration.
+
+## Technical Requirements
+
+## Acceptance Criteria
+
+- [x] The "Sign In" button ONLY shows when you are doing 'local' development.
+- [x] The "Sign In with Google" button shows up when you are doing local development too, and it's the only button that shows up when in production.
+- [x] A "user" can login locally
+- [x] A "admin" can login locally
+
+---

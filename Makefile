@@ -3,7 +3,7 @@ REGISTRY := docker.io/joeyfreeland
 FRONTEND_IMAGE := $(REGISTRY)/mldfe:latest
 BACKEND_IMAGE := $(REGISTRY)/mldbe:latest
 
-.PHONY: build-frontend build-backend build-all push-frontend push-backend push-all docker-all
+.PHONY: build-frontend build-backend build-all push-frontend push-backend push-all docker-all dev-db-up dev-db-down
 
 # Build frontend image
 build-frontend:
@@ -42,6 +42,17 @@ dev-frontend:
 
 dev-backend:
 	cd backend && DATABASE_URL='postgres://postgres:testing@localhost/mldegrees?sslmode=disable' go run cmd/api/main.go
+
+dev-db-up:
+	@docker run -d --name mlddb -e POSTGRES_PASSWORD=testing -e POSTGRES_DB=mldegrees -p 5432:5432 postgres
+	@echo "Waiting for database to start..."
+	@sleep 5
+	@echo "Database started. Setting up..."
+	@(cd backend && DATABASE_URL='postgres://postgres:testing@localhost/mldegrees?sslmode=disable' ./setup-db.sh)
+
+dev-db-down:
+	@docker stop mlddb || true
+	@docker rm mlddb || true
 
 # Test commands
 test-frontend:

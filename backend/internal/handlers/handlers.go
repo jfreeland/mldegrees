@@ -81,6 +81,47 @@ func HandleVote(database *db.DB) http.HandlerFunc {
 	}
 }
 
+// HandleLocalAuth handles local development authentication
+func HandleLocalAuth(database *db.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		var req struct {
+			Role string `json:"role"` // "user" or "admin"
+		}
+
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, "Invalid request body", http.StatusBadRequest)
+			return
+		}
+
+		// Validate role
+		if req.Role != "user" && req.Role != "admin" {
+			http.Error(w, "Invalid role. Must be 'user' or 'admin'", http.StatusBadRequest)
+			return
+		}
+
+		// Create local user
+		email := req.Role + "@local.dev"
+		name := "Local " + req.Role
+		user, err := database.CreateLocalUser(email, name, req.Role)
+		if err != nil {
+			http.Error(w, "Failed to create local user", http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"user":     user,
+			"token":    user.GoogleID, // Use the local google_id as token
+			"message": "Local authentication successful",
+		})
+	}
+}
+
 // EnableCORS adds CORS headers to responses
 func EnableCORS(next http.HandlerFunc) http.HandlerFunc {
 	allowedOrigins := []string{

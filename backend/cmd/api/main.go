@@ -37,6 +37,9 @@ func main() {
 	// Auth endpoint
 	mux.HandleFunc("/api/auth", handlers.EnableCORS(auth.HandleAuth(database)))
 
+	// Local auth endpoint (for development only)
+	mux.HandleFunc("/api/auth/local", handlers.EnableCORS(handlers.HandleLocalAuth(database)))
+
 	// Programs endpoint (public, but includes user votes if authenticated)
 	mux.HandleFunc("/api/programs", handlers.EnableCORS(handlers.HandlePrograms(database)))
 

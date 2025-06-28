@@ -84,18 +84,18 @@ func (db *DB) CreateOrUpdateUser(email, name, googleID string) (*models.User, er
 	var user models.User
 
 	query := `
-		INSERT INTO users (email, name, google_id)
-		VALUES ($1, $2, $3)
+		INSERT INTO users (email, name, google_id, role)
+		VALUES ($1, $2, $3, 'user')
 		ON CONFLICT (google_id)
 		DO UPDATE SET
 			email = EXCLUDED.email,
 			name = EXCLUDED.name,
 			updated_at = CURRENT_TIMESTAMP
-		RETURNING id, email, name, google_id, created_at, updated_at
+		RETURNING id, email, name, google_id, role, created_at, updated_at
 	`
 
 	err := db.QueryRow(query, email, name, googleID).Scan(
-		&user.ID, &user.Email, &user.Name, &user.GoogleID, &user.CreatedAt, &user.UpdatedAt,
+		&user.ID, &user.Email, &user.Name, &user.GoogleID, &user.Role, &user.CreatedAt, &user.UpdatedAt,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("creating/updating user: %w", err)
@@ -108,9 +108,9 @@ func (db *DB) CreateOrUpdateUser(email, name, googleID string) (*models.User, er
 func (db *DB) GetUserByGoogleID(googleID string) (*models.User, error) {
 	var user models.User
 
-	query := `SELECT id, email, name, google_id, created_at, updated_at FROM users WHERE google_id = $1`
+	query := `SELECT id, email, name, google_id, role, created_at, updated_at FROM users WHERE google_id = $1`
 	err := db.QueryRow(query, googleID).Scan(
-		&user.ID, &user.Email, &user.Name, &user.GoogleID, &user.CreatedAt, &user.UpdatedAt,
+		&user.ID, &user.Email, &user.Name, &user.GoogleID, &user.Role, &user.CreatedAt, &user.UpdatedAt,
 	)
 	if err == sql.ErrNoRows {
 		return nil, nil
@@ -150,4 +150,33 @@ func (db *DB) RemoveVote(userID, programID int) error {
 		return fmt.Errorf("removing vote: %w", err)
 	}
 	return nil
+}
+
+// CreateLocalUser creates a local development user
+func (db *DB) CreateLocalUser(email, name, role string) (*models.User, error) {
+	var user models.User
+
+	query := `
+		INSERT INTO users (email, name, google_id, role)
+		VALUES ($1, $2, $3, $4)
+		ON CONFLICT (google_id)
+		DO UPDATE SET
+			email = EXCLUDED.email,
+			name = EXCLUDED.name,
+			role = EXCLUDED.role,
+			updated_at = CURRENT_TIMESTAMP
+		RETURNING id, email, name, google_id, role, created_at, updated_at
+	`
+
+	// Use email as google_id for local users with a prefix
+	localGoogleID := "local_" + email
+
+	err := db.QueryRow(query, email, name, localGoogleID, role).Scan(
+		&user.ID, &user.Email, &user.Name, &user.GoogleID, &user.Role, &user.CreatedAt, &user.UpdatedAt,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("creating local user: %w", err)
+	}
+
+	return &user, nil
 }

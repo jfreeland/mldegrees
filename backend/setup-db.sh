@@ -22,6 +22,17 @@ else
     exit 1
 fi
 
+# Run user roles migration
+echo "Adding user roles..."
+psql $DATABASE_URL < migrations/003_add_user_roles.sql
+
+if [ $? -eq 0 ]; then
+    echo "✓ User roles added successfully"
+else
+    echo "✗ Failed to add user roles"
+    exit 1
+fi
+
 # Seed data
 echo "Seeding data..."
 psql $DATABASE_URL < migrations/002_seed_data.sql
