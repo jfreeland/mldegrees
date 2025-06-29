@@ -3,6 +3,7 @@ kind: Kustomization
 namespace: mld
 resources:
   - 1password.yaml
+  - datadog.yaml
   - gitrepository.yaml
   - helmrelease.yaml
   - postgresql-cluster.yaml
