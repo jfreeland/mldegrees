@@ -55,6 +55,12 @@ spec:
         memory: 100Mi
     autoscaling:
       enabled: true
+    backend:
+      image:
+        tag: 1.1.0
+    frontend:
+      image:
+        tag: 1.1.0
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2beta2
 kind: HelmRelease
@@ -104,6 +110,12 @@ spec:
         memory: 50Mi
     autoscaling:
       enabled: true
+    backend:
+      image:
+        tag: 1.1.0
+    frontend:
+      image:
+        tag: 1.1.0
 ---
 # TODO: I started 404'ing when I migrated the backend to the more generic
 # chart.  That shouldn't happen.  Need to look into
@@ -154,3 +166,9 @@ spec:
               name: frontend
               port:
                 number: 3000
+    backend:
+      image:
+        tag: 1.1.0
+    frontend:
+      image:
+        tag: 1.1.0
