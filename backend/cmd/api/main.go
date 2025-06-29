@@ -9,6 +9,8 @@ import (
 	"githib.com/jfreeland/mldegrees/backend/api/internal/config"
 	"githib.com/jfreeland/mldegrees/backend/api/internal/db"
 	"githib.com/jfreeland/mldegrees/backend/api/internal/handlers"
+	"githib.com/jfreeland/mldegrees/backend/api/internal/middleware"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func main() {
@@ -23,34 +25,41 @@ func main() {
 	fmt.Println("Starting ML Degrees API server...")
 	fmt.Println("Connected to database successfully")
 
-	// Create router with auth middleware
-	mux := http.NewServeMux()
-	authMiddleware := auth.Middleware(database)
+	// Create a new router for the application
+	appMux := http.NewServeMux()
 
 	// Health check endpoint
-	mux.HandleFunc("/api/health", handlers.EnableCORS(func(w http.ResponseWriter, r *http.Request) {
+	appMux.HandleFunc("/api/health", handlers.EnableCORS(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"status":"ok"}`))
 	}))
 
 	// Auth endpoint
-	mux.HandleFunc("/api/auth", handlers.EnableCORS(auth.HandleAuth(database)))
+	appMux.HandleFunc("/api/auth", handlers.EnableCORS(auth.HandleAuth(database)))
 
 	// Local auth endpoint (for development only)
-	mux.HandleFunc("/api/auth/local", handlers.EnableCORS(handlers.HandleLocalAuth(database)))
+	appMux.HandleFunc("/api/auth/local", handlers.EnableCORS(handlers.HandleLocalAuth(database)))
 
 	// Programs endpoint (public, but includes user votes if authenticated)
-	mux.HandleFunc("/api/programs", handlers.EnableCORS(handlers.HandlePrograms(database)))
+	appMux.HandleFunc("/api/programs", handlers.EnableCORS(handlers.HandlePrograms(database)))
 
 	// Vote endpoint (requires authentication)
-	mux.HandleFunc("/api/vote", handlers.EnableCORS(auth.RequireAuth(handlers.HandleVote(database))))
+	appMux.HandleFunc("/api/vote", handlers.EnableCORS(auth.RequireAuth(handlers.HandleVote(database))))
 
-	// Apply auth middleware to all routes
-	handler := authMiddleware(mux)
+	// Create the main router
+	mainMux := http.NewServeMux()
+
+	// Metrics endpoint (uninstrumented)
+	mainMux.Handle("/metrics", promhttp.Handler())
+
+	// Instrumented application endpoints
+	authMiddleware := auth.Middleware(database)
+	instrumentedApp := middleware.LoggingMiddleware(authMiddleware(appMux))
+	mainMux.Handle("/", instrumentedApp)
 
 	log.Printf("Server starting on :%s", cfg.Port)
-	if err := http.ListenAndServe(":"+cfg.Port, handler); err != nil {
+	if err := http.ListenAndServe(":"+cfg.Port, mainMux); err != nil {
 		log.Fatalf("Server failed to start: %v", err)
 	}
 }
