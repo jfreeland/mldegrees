@@ -139,7 +139,7 @@ spec:
             service:
               name: frontend
               port:
-                number: 80
+                number: 3000
         - path: /(api/.*)
           pathType: ImplementationSpecific
           backend:
@@ -153,4 +153,4 @@ spec:
             service:
               name: frontend
               port:
-                number: 80
+                number: 3000
