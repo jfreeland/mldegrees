@@ -28,6 +28,13 @@ export default function Home() {
     sortOrder: 'desc'
   });
 
+  // Extract unique location options from universities data
+  const locationOptions = {
+    countries: [...new Set(universities.map(u => u.country).filter(Boolean))].sort(),
+    cities: [...new Set(universities.map(u => u.city).filter(Boolean))].sort(),
+    states: [...new Set(universities.map(u => u.state).filter(Boolean))].sort()
+  };
+
   const fetchUniversities = useCallback(async () => {
     try {
       const headers: HeadersInit = {
@@ -59,8 +66,11 @@ export default function Home() {
 
       const data = await response.json();
 
+      // Ensure data is an array before transforming
+      const programsArray = Array.isArray(data) ? data : [];
+
       // Transform backend data to match frontend University type
-      const transformedData: University[] = data.map((program: any) => ({
+      const transformedData: University[] = programsArray.map((program: any) => ({
         id: program.id.toString(),
         name: program.university_name,
         programName: program.name,
@@ -191,8 +201,8 @@ export default function Home() {
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             >
               <option value="">All Types</option>
-              <option value="bachelors">Bachelor's</option>
-              <option value="masters">Master's</option>
+              <option value="bachelors">Bachelor&apos;s</option>
+              <option value="masters">Master&apos;s</option>
               <option value="certificate">Certificate</option>
             </select>
           </div>
@@ -201,39 +211,48 @@ export default function Home() {
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Country
             </label>
-            <input
-              type="text"
+            <select
               value={filters.country}
               onChange={(e) => setFilters(prev => ({ ...prev, country: e.target.value }))}
-              placeholder="e.g., United States"
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-            />
+            >
+              <option value="">All Countries</option>
+              {locationOptions.countries.map(country => (
+                <option key={country} value={country}>{country}</option>
+              ))}
+            </select>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               City
             </label>
-            <input
-              type="text"
+            <select
               value={filters.city}
               onChange={(e) => setFilters(prev => ({ ...prev, city: e.target.value }))}
-              placeholder="e.g., Boston"
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-            />
+            >
+              <option value="">All Cities</option>
+              {locationOptions.cities.map(city => (
+                <option key={city} value={city}>{city}</option>
+              ))}
+            </select>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               State
             </label>
-            <input
-              type="text"
+            <select
               value={filters.state}
               onChange={(e) => setFilters(prev => ({ ...prev, state: e.target.value }))}
-              placeholder="e.g., MA"
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-            />
+            >
+              <option value="">All States</option>
+              {locationOptions.states.map(state => (
+                <option key={state} value={state}>{state}</option>
+              ))}
+            </select>
           </div>
 
           <div>
