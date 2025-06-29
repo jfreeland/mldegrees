@@ -1,0 +1,39 @@
+---
+apiVersion: synthetics.datadog.upbound.io/v1alpha1
+kind: Test
+metadata:
+  name: mldegrees
+spec:
+  providerConfigRef:
+    name: datadog
+  forProvider:
+    name: Uptime test for mldegrees.com
+    assertion:
+      - operator: is
+        target: "200"
+        type: statusCode
+      - operator: contains
+        target: "About"
+        type: body
+    locations:
+      - aws:us-east-1
+    optionsList:
+      - monitorOptions:
+        tickEvery: 3600
+    requestDefinition:
+      method: GET
+      url: https://mldegrees.com
+    message: |
+      This test validates that we can connect to https://mldegrees.com, running on the `bands` cluster.
+
+      If this fails check:
+      - Is Rancher running on nuc? https://192.168.1.200:8443/dashboard/auth/login
+      - Is citc-f6d running on bands?
+      - Are the backend and frontend pods running?
+
+      @joeyfreeland@gmail.com
+    status: live
+    type: api
+    subtype: http
+    tags:
+      - env:personal
