@@ -21,7 +21,7 @@ spec:
     #storageClass: local-path
   backup:
     barmanObjectStore:
-      destinationPath: "s3://mld-rds-backups/mld-db"
+      destinationPath: "s3://mld-rds-backups"
       s3Credentials:
         accessKeyId:
           name: aws-keys

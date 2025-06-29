@@ -15,18 +15,7 @@ spec:
       interval: 1m0s
   values:
     backend:
-      enabled: true
-      image:
-        repository: joeyfreeland/mldbe
-        tag: 1.0.4
-      env:
-        - name: DATABASE_URL
-          valueFrom:
-            secretKeyRef:
-              name: backend-secrets
-              key: database-url
-        - name: PORT
-          value: "8080"
+      enabled: false
     frontend:
       enabled: true
       image:
@@ -75,7 +64,7 @@ spec:
           pathType: ImplementationSpecific
           backend:
             service:
-              name: mld-backend
+              name: backend
               port:
                 number: 8080
         - path: /(.*)
@@ -85,3 +74,61 @@ spec:
               name: mld-frontend
               port:
                 number: 80
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta2
+kind: HelmRelease
+metadata:
+  name: backend
+  namespace: mld
+spec:
+  interval: 1m0s
+  chart:
+    spec:
+      chart: ./charts/temp
+      sourceRef:
+        kind: GitRepository
+        name: jf-helm
+      interval: 1m0s
+  values:
+    replicaCount: 2
+
+    image:
+      repository: nginx
+      pullPolicy: Always
+      tag: 1.0.4
+
+    imagePullSecrets:
+      - name: dockerhub
+
+    serviceAccount:
+      create: true
+
+    service:
+      type: ClusterIP
+      port: 8080
+
+    env:
+      - name: DATABASE_URL
+        valueFrom:
+          secretKeyRef:
+            name: backend-secrets
+            key: database-url
+      - name: PORT
+        value: "8080"
+
+    livenessProbe:
+      path: /api/health
+
+    readinessProbe:
+      path: /api/health
+
+    resources:
+      requests:
+        cpu: 100m
+        memory: 50Mi
+
+    autoscaling:
+      enabled: true
+      minReplicas: 2
+      maxReplicas: 10
+      targetCPUUtilizationPercentage: 70
