@@ -19,6 +19,7 @@ spec:
       - aws:us-east-1
     optionsList:
       - monitorOptions:
+          - renotifyInterval: 3600
         tickEvery: 3600
     requestDefinition:
       - method: GET
