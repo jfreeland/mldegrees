@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { metrics } from '@/lib/metrics';
+import { logger } from '@/lib/logger';
 
 export function middleware(request: NextRequest) {
   const start = Date.now();
@@ -10,18 +11,18 @@ export function middleware(request: NextRequest) {
   // Increment in-flight requests
   metrics.incrementInFlight();
 
-  // Log the incoming request
-  const clientIP = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
-  console.log(`[${new Date().toISOString()}] Started ${method} ${fullUrl} from ${clientIP}`);
-
-  // Continue with the request
   const response = NextResponse.next();
 
   // Calculate duration and log completion
-  const duration = (Date.now() - start) / 1000;
-  const statusCode = response.status.toString();
+  const duration = Date.now() - start;
+  const statusCode = response.status;
+  const clientIP = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
 
-  console.log(`[${new Date().toISOString()}] Completed ${method} ${fullUrl} ${response.status} in ${duration}s`);
+  const isMainPage = pathname === '/';
+
+  if (isMainPage) {
+    logger.info(`${clientIP} - ${method} ${fullUrl} ${statusCode} ${duration}ms`);
+  }
 
   // Record metrics
   metrics.recordHttpRequest(method, pathname, statusCode, duration);

@@ -9,13 +9,8 @@ export function usePageTracking() {
   const pathname = usePathname();
 
   useEffect(() => {
-    // Track page view
-    metrics.recordPageView(pathname);
-    logger.pageView(pathname, {
-      userAgent: navigator.userAgent,
-      referrer: document.referrer,
-    });
-  }, [pathname]);
+     // Track page view
+    metrics.recordPageView(pathname);  }, [pathname]);
 }
 
 export function useApiTracking() {
@@ -31,14 +26,10 @@ export function useApiTracking() {
       const duration = (Date.now() - start) / 1000;
       const status = response.status.toString();
 
-      // Track metrics
+       // Track metrics
       metrics.recordApiCall(endpoint, method, status, duration);
 
-      // Log the API call
-      logger.apiCall(method, endpoint, response.status, duration * 1000);
-
-      return response;
-    } catch (error) {
+      return response;    } catch (error) {
       const duration = (Date.now() - start) / 1000;
 
       // Track failed API call

@@ -58,9 +58,6 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 		// Wrap the response writer to capture status code
 		rw := &responseWriter{ResponseWriter: w, statusCode: http.StatusOK}
 
-		// Log the incoming request
-		log.Printf("Started %s %s from %s", r.Method, r.URL.Path, r.RemoteAddr)
-
 		// Process the request
 		next.ServeHTTP(rw, r)
 
@@ -69,7 +66,11 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 		statusCode := strconv.Itoa(rw.statusCode)
 
 		// Log the completed request
-		log.Printf("Completed %s %s %d in %v", r.Method, r.URL.Path, rw.statusCode, duration)
+		remoteAddr := r.RemoteAddr
+		if forwardedFor := r.Header.Get("X-Forwarded-For"); forwardedFor != "" {
+			remoteAddr = forwardedFor
+		}
+		log.Printf("%s - %s %s %d %v", remoteAddr, r.Method, r.URL.Path, rw.statusCode, duration)
 
 		// Record metrics
 		httpRequestsTotal.WithLabelValues(r.Method, r.URL.Path, statusCode).Inc()

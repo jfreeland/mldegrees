@@ -17,7 +17,7 @@ class Logger {
 
     if (this.isDevelopment) {
       // Simple format for development
-      return `[${timestamp}] ${level.toUpperCase()}: ${message}${context ? ` ${JSON.stringify(context)}` : ''}${error ? ` ${error.stack}` : ''}`;
+      return `${timestamp} ${message}${context ? ` ${JSON.stringify(context)}` : ''}${error ? ` ${error.stack}` : ''}`;
     }
 
     // Structured JSON format for production
@@ -37,8 +37,10 @@ class Logger {
   }
 
   private log(level: LogLevel, message: string, context?: Record<string, any>, error?: Error) {
+    const now = new Date();
+    const timestamp = `${now.getFullYear()}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getDate().toString().padStart(2, '0')} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
     const entry: LogEntry = {
-      timestamp: new Date().toISOString(),
+      timestamp,
       level,
       message,
       context,
@@ -82,35 +84,6 @@ class Logger {
     this.log('error', message, context, error);
   }
 
-  // API call logging
-  apiCall(method: string, url: string, status: number, duration: number, context?: Record<string, any>) {
-    this.info(`API ${method} ${url} ${status} in ${duration}ms`, {
-      type: 'api_call',
-      method,
-      url,
-      status,
-      duration,
-      ...context,
-    });
-  }
-
-  // Page view logging
-  pageView(route: string, context?: Record<string, any>) {
-    this.info(`Page view: ${route}`, {
-      type: 'page_view',
-      route,
-      ...context,
-    });
-  }
-
-  // User action logging
-  userAction(action: string, context?: Record<string, any>) {
-    this.info(`User action: ${action}`, {
-      type: 'user_action',
-      action,
-      ...context,
-    });
-  }
 }
 
 export const logger = new Logger();

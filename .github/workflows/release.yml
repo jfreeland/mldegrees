@@ -100,8 +100,8 @@ jobs:
         run: |
           set -ex
           TAG=${{ steps.semantic.outputs.new_release_version }}
-          yq -i ".spec.values.backend.image.tag = \"$TAG\"" deploy/base/helmrelease.yaml
-          yq -i ".spec.values.frontend.image.tag = \"$TAG\"" deploy/base/helmrelease.yaml
+          yq -i ".spec.values.image.tag = \"$TAG\"" deploy/base/helmrelease-backend.yaml
+          yq -i ".spec.values.image.tag = \"$TAG\"" deploy/base/helmrelease-frontend.yaml
 
       - name: commit helmrelease
         if: steps.semantic.outputs.new_release_published == 'true'

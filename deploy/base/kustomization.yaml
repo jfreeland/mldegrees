@@ -5,6 +5,8 @@ resources:
   - 1password.yaml
   - datadog.yaml
   - gitrepository.yaml
-  - helmrelease.yaml
+  - helmrelease-frontend.yaml
+  - helmrelease-backend.yaml
+  - helmrelease-ingress.yaml
   - postgresql-cluster.yaml
   - s3-bucket.yaml

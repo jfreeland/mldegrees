@@ -1,0 +1,49 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta2
+kind: HelmRelease
+metadata:
+  name: backend
+  namespace: mld
+spec:
+  interval: 1m0s
+  chart:
+    spec:
+      chart: ./charts/generic
+      sourceRef:
+        kind: GitRepository
+        name: jf-helm
+      interval: 1m0s
+  values:
+    fullnameOverride: backend
+    replicaCount: 2
+    image:
+      repository: joeyfreeland/mldbe
+      pullPolicy: Always
+      tag: 1.0.4
+    imagePullSecrets:
+      - name: dockerhub
+    serviceAccount:
+      create: true
+    service:
+      type: ClusterIP
+      port: 8080
+    env:
+      - name: DATABASE_URL
+        valueFrom:
+          secretKeyRef:
+            name: backend-secrets
+            key: database-url
+      - name: PORT
+        value: "8080"
+    livenessProbe:
+      httpGet:
+        path: /api/health
+    readinessProbe:
+      httpGet:
+        path: /api/health
+    resources:
+      requests:
+        cpu: 100m
+        memory: 50Mi
+    autoscaling:
+      enabled: true
