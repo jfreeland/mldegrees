@@ -112,9 +112,11 @@ spec:
       - name: PORT
         value: "8080"
     livenessProbe:
-      path: /api/health
+      httpGet:
+        path: /api/health
     readinessProbe:
-      path: /api/health
+      httpGet:
+        path: /api/health
     resources:
       requests:
         cpu: 100m
