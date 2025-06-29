@@ -21,8 +21,8 @@ spec:
       - monitorOptions:
         tickEvery: 3600
     requestDefinition:
-      method: GET
-      url: https://mldegrees.com
+      - method: GET
+        url: https://mldegrees.com
     message: |
       This test validates that we can connect to https://mldegrees.com, running on the `bands` cluster.
 
