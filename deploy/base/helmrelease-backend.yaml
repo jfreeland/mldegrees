@@ -19,7 +19,7 @@ spec:
     image:
       repository: joeyfreeland/mldbe
       pullPolicy: Always
-      tag: 1.1.5
+      tag: 1.1.6
     imagePullSecrets:
       - name: dockerhub
     serviceAccount:
@@ -29,7 +29,6 @@ spec:
       ad.datadoghq.com/backend.check_names: '["openmetrics"]'
       ad.datadoghq.com/backend.init_configs: '[{}]'
       ad.datadoghq.com/backend.instances: '[{"openmetrics_endpoint": "http://%%host%%:%%port%%/api/metrics"}]'
-
     service:
       type: ClusterIP
       port: 8080

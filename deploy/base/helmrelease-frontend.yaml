@@ -19,7 +19,7 @@ spec:
     image:
       repository: joeyfreeland/mldfe
       pullPolicy: Always
-      tag: 1.1.5
+      tag: 1.1.6
     imagePullSecrets:
       - name: dockerhub
     serviceAccount:
@@ -29,7 +29,6 @@ spec:
       ad.datadoghq.com/frontend.check_names: '["openmetrics"]'
       ad.datadoghq.com/frontend.init_configs: '[{}]'
       ad.datadoghq.com/frontend.instances: '[{"openmetrics_endpoint": "http://%%host%%:%%port%%/api/metrics"}]'
-
     service:
       type: ClusterIP
       port: 3000
