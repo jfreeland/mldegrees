@@ -11,6 +11,7 @@ interface LogEntry {
 class Logger {
   private isDevelopment = process.env.NODE_ENV === 'development';
   private isProduction = process.env.NODE_ENV === 'production';
+  private isEdgeRuntime = process.env.NEXT_RUNTIME === 'edge';
 
   private formatLogEntry(entry: LogEntry): string {
     const { timestamp, level, message, context, error } = entry;
@@ -52,8 +53,14 @@ class Logger {
     // Always log to console in production for stdout capture
     if (this.isProduction || this.isDevelopment) {
       const c = console as any;
-      const logFn = c[`original${level.charAt(0).toUpperCase() + level.slice(1)}`] || console[level];
-      logFn(formattedMessage);
+      // Use original console methods to avoid double JSON encoding
+      const originalMethod = c[`original${level.charAt(0).toUpperCase() + level.slice(1)}`];
+      if (originalMethod) {
+        originalMethod(formattedMessage);
+      } else {
+        // Use console methods directly to avoid double JSON encoding
+        console[level](formattedMessage);
+      }
     }
   }
 

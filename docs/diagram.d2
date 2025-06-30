@@ -1,0 +1,143 @@
+# Diagram Configuration
+direction: down
+
+# Services/Components
+
+k8s_cluster: {
+  label: "Kubernetes Cluster"
+  shape: rectangle
+  icon: "https://icons.terrastruct.com/azure%2F_Companies%2FKubernetes.svg"
+}
+
+k8s_cluster.secrets: {
+  label: "Kubernetes Secrets"
+  shape: rectangle
+  icon: "https://icons.terrastruct.com/essentials%2F263-notepad.svg"
+}
+
+k8s_cluster.infra.postgresql: {
+  label: "PostgreSQL\n(CNPG)"
+  shape: cylinder
+  icon: "https://icons.terrastruct.com/dev%2Fpostgresql-words.svg"
+}
+
+k8s_cluster.infra.datadog_agent: {
+  label: "Datadog Agent"
+  shape: rectangle
+  icon: "https://imgix.datadoghq.com/img/about/presskit/usage/logousage_purple.png?auto=format&fit=max&w=847&dpr=2"
+}
+
+k8s_cluster.infra.crossplane: {
+  label: "Crossplane"
+  shape: rectangle
+  icon: "https://github.com/crossplane/artwork/blob/master/logo/logo-stacked-whitetext.png?raw=true"
+}
+
+k8s_cluster.infra.fluxcd: {
+  label: "FluxCD"
+  shape: rectangle
+  icon: "https://fluxcd.io/img/flux-horizontal-color.png"
+}
+
+# External Services
+
+git_repo: {
+  label: "Git Repository\n(GitHub)"
+  shape: rectangle
+  icon: "https://icons.terrastruct.com/social%2F039-github.svg"
+}
+
+onepassword: {
+  label: "1Password"
+  shape: rectangle
+  icon: "https://upload.wikimedia.org/wikipedia/commons/5/5b/1Password_icon.png"
+}
+
+s3_bucket: {
+  label: "S3 Bucket\n(Backups)"
+  shape: cylinder
+  icon: "https://icons.terrastruct.com/aws/Storage/Amazon-Simple-Storage-Service-S3_Bucket_light-bg.svg"
+}
+
+datadog_saas: {
+  label: "Datadog SaaS"
+  shape: cloud
+  icon: "https://imgix.datadoghq.com/img/about/presskit/usage/logousage_purple.png?auto=format&fit=max&w=847&dpr=2"
+}
+
+cloudflare: {
+  label: "Cloudflare"
+  shape: cloud
+  icon: "https://upload.wikimedia.org/wikipedia/commons/4/4b/Cloudflare_Logo.svg"
+}
+
+# User
+developer: {
+  label: "Developer"
+  shape: person
+  icon: "https://icons.terrastruct.com/essentials/365-user.svg"
+}
+
+end_user: {
+  label: "End User"
+  shape: person
+  icon: "https://icons.terrastruct.com/essentials/365-user.svg"
+}
+
+# Application Components
+k8s_cluster.mldegrees: {
+  label: "mldegrees"
+  shape: rectangle
+  style: {
+    fill: "#e0f2f7"
+    stroke: "#4fc3f7"
+  }
+  frontend: {
+    label: "Frontend (Next.JS)"
+    shape: rectangle
+  }
+  backend: {
+    label: "Backend (Golang API)"
+    shape: rectangle
+  }
+}
+
+# Connections
+developer -> git_repo: "Pushes Code/Config"
+git_repo <- k8s_cluster.infra.fluxcd: "Reconciles GitOps"
+# Need some way to show this.
+#k8s_cluster.infra.fluxcd -> k8s_cluster: "Deploys App & Infra Config"
+
+# Crossplane flow
+k8s_cluster.infra.crossplane -> s3_bucket: "Provisions S3 Bucket"
+k8s_cluster.infra.crossplane -> datadog_saas: "Manages Monitors"
+
+# Application to external state
+k8s_cluster.mldegrees -> k8s_cluster.infra.postgresql: "DB Connection"
+k8s_cluster.infra.postgresql -> s3_bucket: "Weekly Backups"
+
+# Secrets flow
+onepassword <- k8s_cluster.infra.onepassword: "Provides Secrets"
+k8s_cluster.infra.onepassword -> k8s_cluster.secrets: "Provisions Kubernetes Secrets"
+k8s_cluster.mldegrees -> k8s_cluster.secrets: "Uses Kubernetes Secrets"
+k8s_cluster.infra -> k8s_cluster.secrets: "Uses Kubernetes Secrets"
+k8s_cluster.infra.postgresql -> k8s_cluster.secrets
+k8s_cluster.infra.datadog_agent -> k8s_cluster.secrets
+k8s_cluster.infra.crossplane -> k8s_cluster.secrets
+
+# Observability flow
+k8s_cluster.mldegrees -> k8s_cluster.infra.datadog_agent: "Logs, Metrics, Traces"
+k8s_cluster.infra.datadog_agent -> datadog_saas: "Sends Telemetry"
+
+# Public access
+cloudflare -> k8s_cluster.mldegrees.frontend: "Public Access\n(Ingress)"
+end_user -> cloudflare: "Accesses Application"
+
+# Group the core Kubernetes components
+k8s_cluster.infra: {
+  fluxcd
+  crossplane
+  onepassword
+  datadog_agent
+  postgresql
+}

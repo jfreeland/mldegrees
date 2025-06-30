@@ -9,30 +9,9 @@ export async function register() {
       environment: process.env.NODE_ENV,
     });
 
-    // Override console methods to ensure structured logging in production
+    // Keep original console methods available for logger to use
     if (process.env.NODE_ENV === 'production') {
       const originalConsole = { ...console };
-
-      console.log = (...args) => {
-        logger.info(args.join(' '));
-      };
-
-      console.info = (...args) => {
-        logger.info(args.join(' '));
-      };
-
-      console.warn = (...args) => {
-        logger.warn(args.join(' '));
-      };
-
-      console.error = (...args) => {
-        const error = args.find(arg => arg instanceof Error);
-        const message = args.filter(arg => typeof arg === 'string').join(' ');
-        const context = args.find(arg => typeof arg === 'object' && !(arg instanceof Error));
-        logger.error(message, context, error);
-      };
-
-      // Keep original methods available
       (console as any).originalLog = originalConsole.log;
       (console as any).originalInfo = originalConsole.info;
       (console as any).originalWarn = originalConsole.warn;
