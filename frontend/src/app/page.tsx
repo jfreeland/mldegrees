@@ -176,9 +176,6 @@ export default function Home() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">
-        Machine Learning Graduate Programs
-      </h1>
       {!session && (
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
           <p className="text-blue-800 dark:text-blue-200">

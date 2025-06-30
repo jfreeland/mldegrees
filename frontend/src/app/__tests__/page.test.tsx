@@ -47,10 +47,6 @@ describe('Home Page', () => {
       renderWithSession(<Home />);
     });
 
-    await waitFor(() => {
-      expect(screen.getByText('Machine Learning Graduate Programs')).toBeInTheDocument();
-    });
-
     // Check if all universities are rendered
     await waitFor(() => {
       mockUniversities.forEach(university => {
@@ -63,10 +59,6 @@ describe('Home Page', () => {
   it('displays correct ratings', async () => {
     await act(async () => {
       renderWithSession(<Home />);
-    });
-
-    await waitFor(() => {
-      expect(screen.getByText('Machine Learning Graduate Programs')).toBeInTheDocument();
     });
 
     await waitFor(() => {
