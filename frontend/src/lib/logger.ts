@@ -51,18 +51,31 @@ class Logger {
 
     // Always log to console in production for stdout capture
     if (this.isProduction || this.isDevelopment) {
+      const c = console as any;
       switch (level) {
         case 'debug':
           console.debug(formattedMessage);
           break;
         case 'info':
-          console.info(formattedMessage);
+          if (c.originalInfo) {
+            c.originalInfo(formattedMessage);
+          } else {
+            console.info(formattedMessage);
+          }
           break;
         case 'warn':
-          console.warn(formattedMessage);
+          if (c.originalWarn) {
+            c.originalWarn(formattedMessage);
+          } else {
+            console.warn(formattedMessage);
+          }
           break;
         case 'error':
-          console.error(formattedMessage);
+          if (c.originalError) {
+            c.originalError(formattedMessage);
+          } else {
+            console.error(formattedMessage);
+          }
           break;
       }
     }

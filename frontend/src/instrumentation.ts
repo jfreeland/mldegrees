@@ -26,7 +26,10 @@ export async function register() {
       };
 
       console.error = (...args) => {
-        logger.error(args.join(' '));
+        const error = args.find(arg => arg instanceof Error);
+        const message = args.filter(arg => typeof arg === 'string').join(' ');
+        const context = args.find(arg => typeof arg === 'object' && !(arg instanceof Error));
+        logger.error(message, context, error);
       };
 
       // Keep original methods available
