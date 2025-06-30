@@ -25,7 +25,7 @@ export function middleware(request: NextRequest) {
   }
 
   // Record metrics
-  metrics.recordHttpRequest(method, pathname, statusCode, duration);
+  metrics.recordHttpRequest(method, pathname, statusCode.toString(), duration);
   metrics.decrementInFlight();
 
   return response;
