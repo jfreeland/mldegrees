@@ -20,7 +20,7 @@ export function middleware(request: NextRequest) {
 
   const isMainPage = pathname === '/';
 
-  if (isMainPage) {
+  if (!isMainPage) {
     logger.info(`${clientIP} - ${method} ${fullUrl} ${statusCode} ${duration}ms`);
   }
 

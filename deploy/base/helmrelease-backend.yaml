@@ -24,6 +24,12 @@ spec:
       - name: dockerhub
     serviceAccount:
       create: true
+    podAnnotations:
+      ad.datadoghq.com/backend.logs: '[{"source": "go", "service": "backend"}]'
+      ad.datadoghq.com/backend.check_names: '["openmetrics"]'
+      ad.datadoghq.com/backend.init_configs: '[{}]'
+      ad.datadoghq.com/backend.instances: '[{"openmetrics_endpoint": "http://%%host%%:%%port%%/api/metrics"}]'
+
     service:
       type: ClusterIP
       port: 8080

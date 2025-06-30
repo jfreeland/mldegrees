@@ -65,12 +65,14 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 		duration := time.Since(start)
 		statusCode := strconv.Itoa(rw.statusCode)
 
-		// Log the completed request
-		remoteAddr := r.RemoteAddr
-		if forwardedFor := r.Header.Get("X-Forwarded-For"); forwardedFor != "" {
-			remoteAddr = forwardedFor
+		// Log the completed request if it's not the health check endpoint
+		if r.URL.Path != "/api/health" {
+			remoteAddr := r.RemoteAddr
+			if forwardedFor := r.Header.Get("X-Forwarded-For"); forwardedFor != "" {
+				remoteAddr = forwardedFor
+			}
+			log.Printf("%s - %s %s %d %v", remoteAddr, r.Method, r.URL.Path, rw.statusCode, duration)
 		}
-		log.Printf("%s - %s %s %d %v", remoteAddr, r.Method, r.URL.Path, rw.statusCode, duration)
 
 		// Record metrics
 		httpRequestsTotal.WithLabelValues(r.Method, r.URL.Path, statusCode).Inc()

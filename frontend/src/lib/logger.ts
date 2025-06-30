@@ -52,32 +52,8 @@ class Logger {
     // Always log to console in production for stdout capture
     if (this.isProduction || this.isDevelopment) {
       const c = console as any;
-      switch (level) {
-        case 'debug':
-          console.debug(formattedMessage);
-          break;
-        case 'info':
-          if (c.originalInfo) {
-            c.originalInfo(formattedMessage);
-          } else {
-            console.info(formattedMessage);
-          }
-          break;
-        case 'warn':
-          if (c.originalWarn) {
-            c.originalWarn(formattedMessage);
-          } else {
-            console.warn(formattedMessage);
-          }
-          break;
-        case 'error':
-          if (c.originalError) {
-            c.originalError(formattedMessage);
-          } else {
-            console.error(formattedMessage);
-          }
-          break;
-      }
+      const logFn = c[`original${level.charAt(0).toUpperCase() + level.slice(1)}`] || console[level];
+      logFn(formattedMessage);
     }
   }
 
