@@ -1,47 +1,48 @@
 # Machine Learning Degrees Website
 
 A website for [machinelearningdegrees.com](https://machinelearningdegrees.com)
-and [mldegrees.com](https://mldegrees.com) that helps people learn about
-machine learning degrees and find top programs.
+and [mldegrees.com](https://mldegrees.com) that helps people learn about machine
+learning degrees and find top programs. Theoretically.
+
+Mostly just a playground for me to have an app to play with to tinker with LLM's
+and infrastructure and observability things I care about.
+
+This runs on my homelab cluster in <https://github.com/jfreeland/flux> and uses
+helm charts from <https://github.com/jfreeland/helm>.
+
+Most of the code in `backend` and `frontend` has been completely AI generated
+with `claude-sonnet-4` and `gemini-2.5-pro`. I've not reviewed most of it. I've
+written requirements in `REQUIREMENTS.md` and move completed requirements to
+`docs/COMPELTED.md`. I don't know if that's the best practice.
 
 ## Project Structure
 
-- `frontend/`: Next.js frontend application
-- `backend/`: Go backend API
+- `frontend`: Next.js frontend application
+- `backend`: Go backend API
+- `deploy`: manifests for various deployment related activities
 
 ## Getting Started
-
-### Frontend
-
-```bash
-cd frontend
-npm install
-next dev
-```
-
-The frontend will be available at [http://localhost:3000](http://localhost:3000).
-
-### Backend
-
-```bash
-cd backend
-go run cmd/api/main.go
-```
 
 ### Database
 
 ```bash
-docker run -d --name postgres -e POSTGRES_PASSWORD=testing -p 5432:5432 postgres
-docker exec -it postgres  psql -U postgres
-CREATE DATABASE mldegrees;
+make dev-db-up
 ```
 
-The API will be available at [http://localhost:8080](http://localhost:8080).
+### Frontend
 
-## Development
+```bash
+make dev-frontend
+```
 
-See [OpenCode.md](./OpenCode.md) for development guidelines and commands.
+The frontend will be available at
+[http://localhost:3000](http://localhost:3000).
 
-## testing
+### Backend
 
-for fun
+```bash
+make dev-backend
+```
+
+The API will be available at
+[http://localhost:8080/api](http://localhost:8080/api).
