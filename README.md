@@ -15,6 +15,10 @@ with `claude-sonnet-4` and `gemini-2.5-pro`. I've not reviewed most of it. I've
 written requirements in `REQUIREMENTS.md` and move completed requirements to
 `docs/COMPELTED.md`. I don't know if that's the best practice.
 
+## Architecture
+
+![Diagram](docs/diagram.png)
+
 ## Project Structure
 
 - `frontend`: Next.js frontend application
