@@ -34,8 +34,10 @@ spec:
             "init_config": {},
             "instances": [
               {
-                "openmetrics_endpoint": "http://%%host%%:%%port%%/api/metrics",
-                "namespace": "frontend"
+                "openmetrics_endpoint": "http://%%host%%:3000/api/metrics",
+                "namespace": "frontend",
+                "metrics": [".*"],
+                "histogram_buckets_as_distributions": true
               }
             ]
           }
