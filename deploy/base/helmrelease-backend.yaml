@@ -32,10 +32,10 @@ spec:
             "init_config": {},
             "instances": [
               {
-                "openmetrics_endpoint": "http://%%host%%:%%port%%/metrics",
+                "openmetrics_endpoint": "http://%%host%%:8080/metrics",
                 "namespace": "backend",
                 "metrics": [
-                  "http_requests_total"
+                  {"http_requests_total": "http.requests.total"}
                 ]
               }
             ]
