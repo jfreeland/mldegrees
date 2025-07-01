@@ -34,9 +34,8 @@ spec:
               {
                 "openmetrics_endpoint": "http://%%host%%:8080/metrics",
                 "namespace": "backend",
-                "metrics": [
-                  {"http_requests_total": "http.requests.total"}
-                ]
+                "metrics": [".*"],
+                "histogram_buckets_as_distributions": true
               }
             ]
           }
