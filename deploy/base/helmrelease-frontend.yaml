@@ -26,9 +26,6 @@ spec:
       create: true
     podAnnotations:
       ad.datadoghq.com/frontend.logs: '[{"source": "nodejs", "service": "frontend"}]'
-      ad.datadoghq.com/frontend.check_names: '["openmetrics"]'
-      ad.datadoghq.com/frontend.init_configs: '[{}]'
-      ad.datadoghq.com/frontend.instances: '[{"openmetrics_endpoint": "http://%%host%%:%%port%%/api/metrics"}]'
     service:
       type: ClusterIP
       port: 3000
@@ -54,6 +51,12 @@ spec:
           secretKeyRef:
             name: frontend-secrets
             key: auth-secret
+      - name: DD_AGENT_HOST
+        valueFrom:
+          fieldRef:
+            fieldPath: status.hostIP
+      - name: DD_DOGSTATSD_PORT
+        value: "8125"
     resources:
       requests:
         cpu: 100m

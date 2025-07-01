@@ -40,6 +40,12 @@ spec:
             key: database-url
       - name: PORT
         value: "8080"
+      - name: DD_AGENT_HOST
+        valueFrom:
+          fieldRef:
+            fieldPath: status.hostIP
+      - name: DD_DOGSTATSD_PORT
+        value: "8125"
     livenessProbe:
       httpGet:
         path: /api/health

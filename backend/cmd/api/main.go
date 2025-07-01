@@ -9,12 +9,18 @@ import (
 	"githib.com/jfreeland/mldegrees/backend/api/internal/config"
 	"githib.com/jfreeland/mldegrees/backend/api/internal/db"
 	"githib.com/jfreeland/mldegrees/backend/api/internal/handlers"
+	"githib.com/jfreeland/mldegrees/backend/api/internal/metrics"
 	"githib.com/jfreeland/mldegrees/backend/api/internal/middleware"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func main() {
 	cfg := config.Load()
+
+	// Initialize DogStatsD metrics
+	if err := metrics.Initialize(); err != nil {
+		log.Printf("Failed to initialize metrics: %v", err)
+	}
+	defer metrics.Close()
 
 	database, err := db.New(cfg.DatabaseURL)
 	if err != nil {
@@ -49,9 +55,6 @@ func main() {
 
 	// Create the main router
 	mainMux := http.NewServeMux()
-
-	// Metrics endpoint (uninstrumented)
-	mainMux.Handle("/metrics", promhttp.Handler())
 
 	// Instrumented application endpoints
 	authMiddleware := auth.Middleware(database)

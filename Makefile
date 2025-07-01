@@ -3,7 +3,7 @@ REGISTRY := docker.io/joeyfreeland
 FRONTEND_IMAGE := $(REGISTRY)/mldfe:latest
 BACKEND_IMAGE := $(REGISTRY)/mldbe:latest
 
-.PHONY: build-frontend build-backend build-all push-frontend push-backend push-all docker-all dev-db-up dev-db-down
+.PHONY: build-frontend build-backend build-all push-frontend push-backend push-all docker-all dev-db-up dev-db-down test
 
 # Build frontend image
 build-frontend:
@@ -60,6 +60,8 @@ test-frontend:
 
 test-backend:
 	cd backend && go test ./...
+
+test: test-frontend test-backend
 
 # Lint commands
 lint-frontend:
