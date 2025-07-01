@@ -4,6 +4,8 @@ kind: ServiceMonitor
 metadata:
   name: backend
   namespace: mld
+  labels:
+    release: kube-prometheus-stack
 spec:
   selector:
     matchLabels:
