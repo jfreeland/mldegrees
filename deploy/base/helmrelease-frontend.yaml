@@ -35,8 +35,10 @@ spec:
           "openmetrics": {
             "init_config": {},
             "instances": [
-              "openmetrics_endpoint": "http://%%host%%:%%port%%/api/metrics",
-              "namespace": "frontend"
+              {
+                "openmetrics_endpoint": "http://%%host%%:%%port%%/api/metrics",
+                "namespace": "frontend"
+              }
             ]
           }
         }
