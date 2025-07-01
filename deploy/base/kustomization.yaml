@@ -10,3 +10,5 @@ resources:
   - helmrelease-ingress.yaml
   - postgresql-cluster.yaml
   - s3-bucket.yaml
+  - servicemonitor-backend.yaml
+  - servicemonitor-frontend.yaml

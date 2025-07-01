@@ -26,13 +26,16 @@ spec:
       create: true
     podAnnotations:
       ad.datadoghq.com/backend.logs: '[{"source": "go", "service": "backend"}]'
-      ad.datadoghq.com/backend.check_names: '["openmetrics"]'
-      ad.datadoghq.com/backend.init_configs: "[{}]"
-      ad.datadoghq.com/backend.instances:
-        '[{"openmetrics_endpoint": "http://%%host%%:%%port%%/metrics"}]'
-      prometheus.io/scrape: "true"
-      prometheus.io/path: "/metrics"
-      prometheus.io/port: "8080"
+      ad.datadoghq.com/backend.checks: |
+        {
+          "openmetrics": {
+            "init_config": {},
+            "instances": [
+              "openmetrics_endpoint": "http://%%host%%:%%port%%/metrics",
+              "namespace": "backend"
+            ]
+          }
+        }
     service:
       type: ClusterIP
       port: 8080
