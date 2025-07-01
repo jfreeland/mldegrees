@@ -28,8 +28,6 @@ spec:
       ad.datadoghq.com/frontend.logs:
         '[{"source": "nodejs", "service": "frontend"}]'
       ad.datadoghq.com/frontend.check_names: '["openmetrics"]'
-      ad.datadoghq.com/frontend.init_configs: "[{}]"
-      ad.datadoghq.com/frontend.instances: "[{}]"
       ad.datadoghq.com/frontend.checks: |
         {
           "openmetrics": {
