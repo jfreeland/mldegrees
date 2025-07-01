@@ -25,7 +25,15 @@ spec:
     serviceAccount:
       create: true
     podAnnotations:
-      ad.datadoghq.com/frontend.logs: '[{"source": "nodejs", "service": "frontend"}]'
+      ad.datadoghq.com/frontend.logs:
+        '[{"source": "nodejs", "service": "frontend"}]'
+      ad.datadoghq.com/frontend.check_names: '["openmetrics"]'
+      ad.datadoghq.com/frontend.init_configs: "[{}]"
+      ad.datadoghq.com/frontend.instances:
+        '[{"openmetrics_endpoint": "http://%%host%%:%%port%%/api/metrics"}]'
+      prometheus.io/scrape: "true"
+      prometheus.io/path: "/api/metrics"
+      prometheus.io/port: "3000"
     service:
       type: ClusterIP
       port: 3000

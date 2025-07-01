@@ -1,28 +1,61 @@
 // Server-side metrics (only available in Node.js environment)
-let dogstatsd: any = null;
+let serverMetrics: any = null;
 
 if (typeof window === 'undefined') {
-  // Only import hot-shots on the server side
+  // Only import prom-client on the server side
   try {
-    const StatsD = require('hot-shots');
+    const promClient = require('prom-client');
+    promClient.collectDefaultMetrics();
 
-    // Get DogStatsD configuration from environment
-    const host = process.env.DD_AGENT_HOST || 'localhost';
-    const port = parseInt(process.env.DD_DOGSTATSD_PORT || '8125');
 
-    dogstatsd = new StatsD({
-      host,
-      port,
-      prefix: 'nextjs.',
-      globalTags: {
-        service: 'mldegrees-frontend',
-        env: process.env.NODE_ENV || 'development',
-      },
+    const httpRequestsTotal = new promClient.Counter({
+      name: 'nextjs_http_requests_total',
+      help: 'Total number of HTTP requests',
+      labelNames: ['method', 'route', 'status_code'],
     });
 
-    console.log(`DogStatsD client initialized, sending to ${host}:${port}`);
+    const httpRequestDuration = new promClient.Histogram({
+      name: 'nextjs_http_request_duration_seconds',
+      help: 'Duration of HTTP requests in seconds',
+      labelNames: ['method', 'route', 'status_code'],
+      buckets: [0.1, 0.3, 0.5, 0.7, 1, 3, 5, 7, 10],
+    });
+
+    const httpRequestsInFlight = new promClient.Gauge({
+      name: 'nextjs_http_requests_in_flight',
+      help: 'Number of HTTP requests currently being processed',
+    });
+
+    const pageViews = new promClient.Counter({
+      name: 'nextjs_page_views_total',
+      help: 'Total number of page views',
+      labelNames: ['route'],
+    });
+
+    const apiCallsTotal = new promClient.Counter({
+      name: 'nextjs_api_calls_total',
+      help: 'Total number of API calls made from frontend',
+      labelNames: ['endpoint', 'method', 'status'],
+    });
+
+    const apiCallDuration = new promClient.Histogram({
+      name: 'nextjs_api_call_duration_seconds',
+      help: 'Duration of API calls in seconds',
+      labelNames: ['endpoint', 'method', 'status'],
+      buckets: [0.1, 0.3, 0.5, 0.7, 1, 3, 5, 7, 10],
+    });
+
+    serverMetrics = {
+      httpRequestsTotal,
+      httpRequestDuration,
+      httpRequestsInFlight,
+      pageViews,
+      apiCallsTotal,
+      apiCallDuration,
+      register: promClient.register,
+    };
   } catch (error) {
-    console.warn('Failed to initialize DogStatsD client:', error);
+    console.warn('Failed to initialize server metrics:', error);
   }
 }
 
@@ -37,8 +70,8 @@ const clientMetrics = {
 export const metrics = {
   // Page view tracking
   recordPageView: (route: string) => {
-    if (dogstatsd) {
-      dogstatsd.increment('page.views', 1, { route });
+    if (serverMetrics) {
+      serverMetrics.pageViews.inc({ route });
     } else {
       const current = clientMetrics.pageViews.get(route) || 0;
       clientMetrics.pageViews.set(route, current + 1);
@@ -47,9 +80,9 @@ export const metrics = {
 
   // API call tracking
   recordApiCall: (endpoint: string, method: string, status: string, duration: number) => {
-    if (dogstatsd) {
-      dogstatsd.increment('api.calls.total', 1, { endpoint, method, status });
-      dogstatsd.timing('api.call.duration', duration * 1000, { endpoint, method, status }); // Convert to ms
+    if (serverMetrics) {
+      serverMetrics.apiCallsTotal.inc({ endpoint, method, status });
+      serverMetrics.apiCallDuration.observe({ endpoint, method, status }, duration);
     } else {
       const key = `${method}:${endpoint}:${status}`;
       const current = clientMetrics.apiCalls.get(key) || { count: 0, totalDuration: 0 };
@@ -62,9 +95,9 @@ export const metrics = {
 
   // HTTP request tracking
   recordHttpRequest: (method: string, route: string, statusCode: string, duration: number) => {
-    if (dogstatsd) {
-      dogstatsd.increment('http.requests.total', 1, { method, route, status_code: statusCode });
-      dogstatsd.timing('http.request.duration', duration * 1000, { method, route, status_code: statusCode }); // Convert to ms
+    if (serverMetrics) {
+      serverMetrics.httpRequestsTotal.inc({ method, route, status_code: statusCode });
+      serverMetrics.httpRequestDuration.observe({ method, route, status_code: statusCode }, duration);
     } else {
       const key = `${method}:${route}:${statusCode}`;
       const current = clientMetrics.httpRequests.get(key) || { count: 0, totalDuration: 0 };
@@ -77,49 +110,50 @@ export const metrics = {
 
   // In-flight request tracking (server only)
   incrementInFlight: () => {
-    if (dogstatsd) {
-      dogstatsd.increment('http.requests.in_flight', 1);
+    if (serverMetrics) {
+      serverMetrics.httpRequestsInFlight.inc();
     }
   },
 
   decrementInFlight: () => {
-    if (dogstatsd) {
-      dogstatsd.decrement('http.requests.in_flight', 1);
+    if (serverMetrics) {
+      serverMetrics.httpRequestsInFlight.dec();
     }
   },
 
-  // Get metrics for export (legacy support)
+  // Get metrics for export
   getMetrics: async () => {
-    // For DogStatsD, metrics are pushed directly to the agent
-    // Return client-side metrics in simple format for debugging
-    const lines: string[] = [];
+    if (serverMetrics) {
+      return await serverMetrics.register.metrics();
+    } else {
+      // Return client-side metrics in Prometheus format
+      const lines: string[] = [];
 
-    if (!dogstatsd) {
       // Page views
       clientMetrics.pageViews.forEach((count, route) => {
-        lines.push(`page_views{route="${route}"} ${count}`);
+        lines.push(`nextjs_page_views_total{route="${route}"} ${count}`);
       });
 
       // API calls
       clientMetrics.apiCalls.forEach((data, key) => {
         const [method, endpoint, status] = key.split(':');
-        lines.push(`api_calls{endpoint="${endpoint}",method="${method}",status="${status}"} ${data.count}`);
-        lines.push(`api_call_duration_sum{endpoint="${endpoint}",method="${method}",status="${status}"} ${data.totalDuration}`);
+        lines.push(`nextjs_api_calls_total{endpoint="${endpoint}",method="${method}",status="${status}"} ${data.count}`);
+        lines.push(`nextjs_api_call_duration_seconds_sum{endpoint="${endpoint}",method="${method}",status="${status}"} ${data.totalDuration}`);
       });
 
       // HTTP requests
       clientMetrics.httpRequests.forEach((data, key) => {
         const [method, route, statusCode] = key.split(':');
-        lines.push(`http_requests{method="${method}",route="${route}",status_code="${statusCode}"} ${data.count}`);
-        lines.push(`http_request_duration_sum{method="${method}",route="${route}",status_code="${statusCode}"} ${data.totalDuration}`);
+        lines.push(`nextjs_http_requests_total{method="${method}",route="${route}",status_code="${statusCode}"} ${data.count}`);
+        lines.push(`nextjs_http_request_duration_seconds_sum{method="${method}",route="${route}",status_code="${statusCode}"} ${data.totalDuration}`);
       });
-    }
 
-    return lines.join('\n') || 'Metrics are being sent to DogStatsD agent';
+      return lines.join('\n');
+    }
   },
 
-  // Get register for server-side use (legacy support)
+  // Get register for server-side use
   getRegister: () => {
-    return null; // DogStatsD doesn't use a register
+    return serverMetrics?.register || null;
   },
 };

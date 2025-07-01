@@ -3,12 +3,17 @@ import { metrics } from '@/lib/metrics';
 
 export async function GET(request: NextRequest) {
   try {
-    const metricsData = await metrics.getMetrics();
+    const promMetrics = await metrics.getMetrics();
+    const register = metrics.getRegister();
 
-    return new NextResponse(metricsData, {
+    if (!register) {
+      return new NextResponse('Metrics are not available', { status: 500 });
+    }
+
+    return new NextResponse(promMetrics, {
       status: 200,
       headers: {
-        'Content-Type': 'text/plain',
+        'Content-Type': register.contentType,
       },
     });
   } catch (error) {
