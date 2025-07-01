@@ -33,7 +33,10 @@ spec:
             "instances": [
               {
                 "openmetrics_endpoint": "http://%%host%%:%%port%%/metrics",
-                "namespace": "backend"
+                "namespace": "backend",
+                "metrics": [
+                  {"http_requests_total": "no_way_srsly"}
+                ]
               }
             ]
           }
