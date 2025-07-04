@@ -6,8 +6,13 @@ const nextConfig = {
       fullUrl: true,
     },
   },
-  devIndicators: {
-    buildActivity: false,
+  async rewrites() {
+    return [
+      {
+        source: '/.well-known/:path*',
+        destination: '/api/not-found',
+      },
+    ];
   },
 };
 

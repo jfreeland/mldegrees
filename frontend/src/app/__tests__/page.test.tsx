@@ -11,6 +11,14 @@ jest.mock('next-auth/react', () => ({
   useSession: () => mockUseSession(),
 }));
 
+// Mock next/navigation
+const mockPush = jest.fn();
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: mockPush,
+  }),
+}));
+
 // Helper function to render with SessionProvider
 const renderWithSession = (component: React.ReactElement, session?: any) => {
   return render(component);

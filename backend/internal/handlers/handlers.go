@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"githib.com/jfreeland/mldegrees/backend/api/internal/auth"
@@ -125,9 +126,135 @@ func HandleLocalAuth(database *db.DB) http.HandlerFunc {
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]interface{}{
-			"user":     user,
-			"token":    user.GoogleID, // Use the local google_id as token
+			"user":    user,
+			"token":   user.GoogleID, // Use the local google_id as token
 			"message": "Local authentication successful",
+		})
+	}
+}
+
+// HandleProposeProgram handles program proposals from authenticated users
+func HandleProposeProgram(database *db.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		user := auth.GetUserFromContext(r.Context())
+		if user == nil {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		var req models.ProposeRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, "Invalid request body", http.StatusBadRequest)
+			return
+		}
+
+		// Validate required fields
+		if req.UniversityName == "" || req.ProgramName == "" || req.Description == "" {
+			http.Error(w, "University name, program name, and description are required", http.StatusBadRequest)
+			return
+		}
+
+		if req.DegreeType == "" {
+			req.DegreeType = "masters" // Default value
+		}
+
+		if req.Country == "" {
+			req.Country = "United States" // Default value
+		}
+
+		if req.City == "" {
+			http.Error(w, "City is required", http.StatusBadRequest)
+			return
+		}
+
+		// Create the program proposal
+		program, err := database.ProposeProgram(&req)
+		if err != nil {
+			http.Error(w, "Failed to create program proposal", http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"program": program,
+			"message": "Program proposal submitted successfully. It will be reviewed by an administrator.",
+		})
+	}
+}
+
+// HandleAdminPrograms returns pending programs for admin review
+func HandleAdminPrograms(database *db.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		user := auth.GetUserFromContext(r.Context())
+		if user == nil || user.Role != "admin" {
+			http.Error(w, "Forbidden: Admin access required", http.StatusForbidden)
+			return
+		}
+
+		programs, err := database.GetPendingPrograms()
+		if err != nil {
+			http.Error(w, "Failed to get pending programs", http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(programs)
+	}
+}
+
+// HandleAdminProgramAction handles approving or rejecting program proposals
+func HandleAdminProgramAction(database *db.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		user := auth.GetUserFromContext(r.Context())
+		if user == nil || user.Role != "admin" {
+			http.Error(w, "Forbidden: Admin access required", http.StatusForbidden)
+			return
+		}
+
+		var req models.AdminProgramAction
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, "Invalid request body", http.StatusBadRequest)
+			return
+		}
+
+		// Validate action
+		if req.Action != "approve" && req.Action != "reject" {
+			http.Error(w, "Invalid action. Must be 'approve' or 'reject'", http.StatusBadRequest)
+			return
+		}
+
+		// Convert action to visibility status
+		visibility := "approved"
+		if req.Action == "reject" {
+			visibility = "rejected"
+		}
+
+		// Update program visibility
+		err := database.UpdateProgramVisibility(req.ProgramID, visibility)
+		if err != nil {
+			http.Error(w, "Failed to update program status", http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"message": fmt.Sprintf("Program %s successfully", req.Action+"d"),
+			"status":  visibility,
 		})
 	}
 }

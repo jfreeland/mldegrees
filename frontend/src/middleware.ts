@@ -19,8 +19,9 @@ export function middleware(request: NextRequest) {
   const clientIP = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
 
   const isMainPage = pathname === '/';
+  const isWellKnown = pathname.startsWith('/.well-known');
 
-  if (!isMainPage) {
+  if (!isMainPage && !isWellKnown) {
     logger.info(`${clientIP} - ${method} ${fullUrl} ${statusCode} ${duration}ms`);
   }
 
@@ -39,7 +40,8 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
+     * - .well-known (Chrome DevTools requests)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|\\.well-known).*)',
   ],
 };

@@ -57,6 +57,21 @@ type ProgramFilters struct {
 	Country    string `json:"country"`
 	City       string `json:"city"`
 	State      string `json:"state"`
-	SortBy     string `json:"sort_by"` // "rating", "name", "created_at"
+	SortBy     string `json:"sort_by"`    // "rating", "name", "created_at"
 	SortOrder  string `json:"sort_order"` // "asc", "desc"
+}
+
+type ProposeRequest struct {
+	UniversityName string  `json:"university_name"`
+	ProgramName    string  `json:"program_name"`
+	Description    string  `json:"description"`
+	DegreeType     string  `json:"degree_type"`
+	Country        string  `json:"country"`
+	City           string  `json:"city"`
+	State          *string `json:"state,omitempty"`
+}
+
+type AdminProgramAction struct {
+	ProgramID int    `json:"program_id"`
+	Action    string `json:"action"` // "approve" or "reject"
 }

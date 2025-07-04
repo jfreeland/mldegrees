@@ -47,6 +47,13 @@ func main() {
 	// Vote endpoint (requires authentication)
 	appMux.HandleFunc("/api/vote", handlers.EnableCORS(auth.RequireAuth(handlers.HandleVote(database))))
 
+	// Propose program endpoint (requires authentication)
+	appMux.HandleFunc("/api/programs/propose", handlers.EnableCORS(auth.RequireAuth(handlers.HandleProposeProgram(database))))
+
+	// Admin endpoints (require admin role)
+	appMux.HandleFunc("/api/admin/programs", handlers.EnableCORS(auth.RequireAdmin(handlers.HandleAdminPrograms(database))))
+	appMux.HandleFunc("/api/admin/programs/action", handlers.EnableCORS(auth.RequireAdmin(handlers.HandleAdminProgramAction(database))))
+
 	// Create the main router
 	mainMux := http.NewServeMux()
 

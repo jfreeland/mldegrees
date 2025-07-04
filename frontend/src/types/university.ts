@@ -22,3 +22,18 @@ export interface UniversitiesResponse {
   universities: University[];
   total: number;
 }
+
+export interface ProposeRequest {
+  university_name: string;
+  program_name: string;
+  description: string;
+  degree_type: string;
+  country: string;
+  city: string;
+  state?: string;
+}
+
+export interface ProposeResponse {
+  program: University;
+  message: string;
+}

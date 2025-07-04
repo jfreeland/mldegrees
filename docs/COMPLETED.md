@@ -288,3 +288,147 @@ Added comprehensive metadata tracking for ML programs including degree type, loc
 - [x] The backend API only returns approved visibility and status active programs by default
 
 ---
+
+# Propose Program
+
+**Completed:** January 4, 2025
+**Priority:** High
+**Components:** Frontend, Backend, Database
+**User Story:** As a user, I want to be able to propose a new program.
+
+## Description
+
+Implemented a complete program proposal system where authenticated users can submit new ML degree programs for review. Added an admin dashboard that allows administrators to approve or reject pending program proposals.
+
+## Implementation Details
+
+### Database Changes
+
+- Leveraged existing `visibility` field in programs table with values: 'approved', 'pending', 'rejected'
+- Programs default to `visibility='pending'` when proposed
+- Only programs with `visibility='approved'` appear in public listings
+- Added database functions for program proposal management
+
+### Backend Changes
+
+- **Models** (`backend/internal/models/models.go`):
+  - Added `ProposeRequest` struct for program proposal data
+  - Added `AdminProgramAction` struct for admin approval/rejection actions
+
+- **Database Functions** (`backend/internal/db/db.go`):
+  - `ProposeProgram()` - Creates new program proposals with pending status
+  - `GetPendingPrograms()` - Retrieves all pending programs for admin review
+  - `UpdateProgramVisibility()` - Updates program status (approve/reject)
+
+- **Authentication** (`backend/internal/auth/auth.go`):
+  - Added `RequireAdmin()` middleware for admin-only endpoints
+
+- **API Handlers** (`backend/internal/handlers/handlers.go`):
+  - `HandleProposeProgram()` - Accepts program proposals from authenticated users
+  - `HandleAdminPrograms()` - Returns pending programs for admin review
+  - `HandleAdminProgramAction()` - Handles program approval/rejection
+
+- **API Routes** (`backend/cmd/api/main.go`):
+  - `POST /api/programs/propose` - Submit program proposals (requires auth)
+  - `GET /api/admin/programs` - Get pending programs (requires admin)
+  - `POST /api/admin/programs/action` - Approve/reject programs (requires admin)
+
+### Frontend Changes
+
+- **Types** (`frontend/src/types/university.ts`):
+  - Added `ProposeRequest` and `ProposeResponse` interfaces
+
+- **Propose Program Page** (`frontend/src/app/propose/page.tsx`):
+  - Complete form for submitting program proposals
+  - Validation for required fields (university name, program name, description, city)
+  - Default values for degree type (masters) and country (United States)
+  - Success/error messaging with proper styling
+  - Authentication checks and redirects
+
+- **Admin Dashboard** (`frontend/src/app/admin/page.tsx`):
+  - Lists all pending program proposals in card format
+  - Approve/reject buttons for each program with loading states
+  - Admin role verification and access control
+  - Real-time updates after actions (programs removed from list)
+  - Responsive design with proper error handling
+
+- **Navigation** (`frontend/src/app/page.tsx`):
+  - Added "Propose New Program" button for authenticated users
+  - Added "Admin Dashboard" button for admin users
+  - Proper role-based visibility using session data
+
+- **Tests** (`frontend/src/app/__tests__/page.test.tsx`):
+  - Updated tests to handle new router dependency
+  - Added mocks for `useRouter` hook
+  - All existing tests continue to pass
+
+### Security Features
+
+- **Authentication Required:** All proposal endpoints require user authentication
+- **Admin Protection:** Admin endpoints require admin role verification
+- **Input Validation:** Both frontend and backend validate required fields
+- **Role-Based Access:** UI elements only show for appropriate user roles
+- **CORS Protection:** Proper CORS headers for cross-origin requests
+
+### User Experience
+
+- **Intuitive Forms:** Clear labels, placeholders, and validation messages
+- **Real-time Feedback:** Loading states and success/error messages
+- **Responsive Design:** Works on desktop and mobile devices
+- **Accessibility:** Proper semantic HTML and ARIA labels
+- **Navigation:** Easy access from main page with role-based visibility
+
+### Technical Features
+
+- **Database Transactions:** Atomic operations for university/program creation
+- **Auto-creation:** Universities are created automatically if they don't exist
+- **Error Handling:** Comprehensive error handling with user-friendly messages
+- **Type Safety:** Full TypeScript support with proper interfaces
+- **Testing:** All existing tests pass with new functionality
+
+### Files Created/Modified
+
+**Backend:**
+
+- `backend/internal/models/models.go` - Added new request/response types
+- `backend/internal/db/db.go` - Added program proposal database functions
+- `backend/internal/auth/auth.go` - Added admin middleware
+- `backend/internal/handlers/handlers.go` - Added new API handlers
+- `backend/cmd/api/main.go` - Added new API routes
+
+**Frontend:**
+
+- `frontend/src/types/university.ts` - Added new interfaces
+- `frontend/src/app/propose/page.tsx` - New propose program page
+- `frontend/src/app/admin/page.tsx` - New admin dashboard page
+- `frontend/src/app/page.tsx` - Added navigation buttons
+- `frontend/src/app/__tests__/page.test.tsx` - Updated tests
+
+## Acceptance Criteria Met
+
+- [x] There is a propose program page where users can propose a new program
+- [x] There is an admin dashboard that is only accessible by admin users where admin users can approve or reject pending programs
+
+## API Endpoints
+
+- `POST /api/programs/propose` - Submit new program proposal (authenticated users)
+- `GET /api/admin/programs` - Get pending programs (admin only)
+- `POST /api/admin/programs/action` - Approve/reject programs (admin only)
+
+## User Workflow
+
+1. **Proposal Submission:**
+   - Authenticated user clicks "Propose New Program" on home page
+   - Fills out form with university name, program name, description, and location
+   - Submits proposal which is saved with `visibility='pending'`
+   - Receives confirmation message
+
+2. **Admin Review:**
+   - Admin user clicks "Admin Dashboard" on home page
+   - Views list of all pending program proposals
+   - Reviews program details and location information
+   - Clicks "Approve" or "Reject" for each program
+   - Program is updated to `visibility='approved'` or `visibility='rejected'`
+   - Approved programs appear in public listings immediately
+
+---

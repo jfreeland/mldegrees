@@ -257,3 +257,123 @@ func (db *DB) CreateLocalUser(email, name, role string) (*models.User, error) {
 
 	return &user, nil
 }
+
+// ProposeProgram creates a new program proposal with pending status
+func (db *DB) ProposeProgram(req *models.ProposeRequest) (*models.Program, error) {
+	tx, err := db.Begin()
+	if err != nil {
+		return nil, fmt.Errorf("beginning transaction: %w", err)
+	}
+	defer tx.Rollback()
+
+	// First, find or create the university
+	var universityID int
+	err = tx.QueryRow("SELECT id FROM universities WHERE name = $1", req.UniversityName).Scan(&universityID)
+	if err == sql.ErrNoRows {
+		// Create new university
+		err = tx.QueryRow("INSERT INTO universities (name) VALUES ($1) RETURNING id", req.UniversityName).Scan(&universityID)
+		if err != nil {
+			return nil, fmt.Errorf("creating university: %w", err)
+		}
+	} else if err != nil {
+		return nil, fmt.Errorf("finding university: %w", err)
+	}
+
+	// Create the program with pending visibility
+	var program models.Program
+	query := `
+		INSERT INTO programs (university_id, name, description, degree_type, country, city, state, status, visibility)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, 'active', 'pending')
+		RETURNING id, university_id, name, description, degree_type, country, city, state, status, visibility, created_at, updated_at
+	`
+
+	err = tx.QueryRow(query, universityID, req.ProgramName, req.Description, req.DegreeType, req.Country, req.City, req.State).Scan(
+		&program.ID, &program.UniversityID, &program.Name, &program.Description, &program.DegreeType,
+		&program.Country, &program.City, &program.State, &program.Status, &program.Visibility,
+		&program.CreatedAt, &program.UpdatedAt,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("creating program: %w", err)
+	}
+
+	// Get university name for the response
+	program.UniversityName = req.UniversityName
+
+	if err = tx.Commit(); err != nil {
+		return nil, fmt.Errorf("committing transaction: %w", err)
+	}
+
+	return &program, nil
+}
+
+// GetPendingPrograms returns all programs with pending visibility for admin review
+func (db *DB) GetPendingPrograms() ([]models.Program, error) {
+	query := `
+		SELECT
+			p.id,
+			p.university_id,
+			p.name,
+			p.description,
+			p.degree_type,
+			p.country,
+			p.city,
+			p.state,
+			p.status,
+			p.visibility,
+			p.created_at,
+			p.updated_at,
+			u.name as university_name
+		FROM programs p
+		JOIN universities u ON p.university_id = u.id
+		WHERE p.visibility = 'pending'
+		ORDER BY p.created_at DESC
+	`
+
+	rows, err := db.Query(query)
+	if err != nil {
+		return nil, fmt.Errorf("querying pending programs: %w", err)
+	}
+	defer rows.Close()
+
+	var programs []models.Program
+	for rows.Next() {
+		var p models.Program
+		var state sql.NullString
+		err := rows.Scan(&p.ID, &p.UniversityID, &p.Name, &p.Description, &p.DegreeType, &p.Country, &p.City, &state, &p.Status, &p.Visibility, &p.CreatedAt, &p.UpdatedAt, &p.UniversityName)
+		if err != nil {
+			return nil, fmt.Errorf("scanning program: %w", err)
+		}
+
+		if state.Valid {
+			p.State = &state.String
+		}
+
+		programs = append(programs, p)
+	}
+
+	return programs, nil
+}
+
+// UpdateProgramVisibility updates a program's visibility status (approve/reject)
+func (db *DB) UpdateProgramVisibility(programID int, visibility string) error {
+	if visibility != "approved" && visibility != "rejected" {
+		return fmt.Errorf("invalid visibility status: %s", visibility)
+	}
+
+	query := `UPDATE programs SET visibility = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2`
+	result, err := db.Exec(query, visibility, programID)
+	if err != nil {
+		return fmt.Errorf("updating program visibility: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("getting rows affected: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("program not found")
+	}
+
+	return nil
+}

@@ -79,6 +79,22 @@ func RequireAuth(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
+// RequireAdmin ensures the user is authenticated and has admin role
+func RequireAdmin(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		user := GetUserFromContext(r.Context())
+		if user == nil {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+		if user.Role != "admin" {
+			http.Error(w, "Forbidden: Admin access required", http.StatusForbidden)
+			return
+		}
+		next(w, r)
+	}
+}
+
 // HandleAuth handles the authentication callback from the frontend
 func HandleAuth(database *db.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
