@@ -3,7 +3,7 @@ REGISTRY := docker.io/joeyfreeland
 FRONTEND_IMAGE := $(REGISTRY)/mldfe:latest
 BACKEND_IMAGE := $(REGISTRY)/mldbe:latest
 
-.PHONY: build-frontend build-backend build-all push-frontend push-backend push-all docker-all dev-db-up dev-db-down test
+.PHONY: build-frontend build-backend build-all push-frontend push-backend push-all docker-all dev-db-up dev-db-down test test-docker-builds test-docker-frontend test-docker-backend
 
 # Build frontend image
 build-frontend:
@@ -73,3 +73,17 @@ build-frontend-local:
 
 build-backend-local:
 	cd backend && go build -o bin/api cmd/api/main.go
+
+# Docker build tests (for CI/pre-commit)
+test-docker-frontend:
+	@echo "Testing frontend Docker build..."
+	@docker buildx build --platform linux/amd64 -t mldegrees-frontend-test ./frontend
+	@echo "✓ Frontend Docker build successful"
+
+test-docker-backend:
+	@echo "Testing backend Docker build..."
+	@docker buildx build --platform linux/amd64 -t mldegrees-backend-test ./backend
+	@echo "✓ Backend Docker build successful"
+
+test-docker-builds: test-docker-frontend test-docker-backend
+	@echo "✓ All Docker builds successful"

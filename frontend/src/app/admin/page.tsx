@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { University } from '@/types/university';
@@ -18,19 +18,7 @@ export default function AdminPage() {
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  useEffect(() => {
-    if (status === 'loading') return;
-
-    if (!session?.user) {
-      router.push('/');
-      return;
-    }
-
-    // Check if user is admin (this should be handled by the backend, but we can add client-side check too)
-    fetchPendingPrograms();
-  }, [session, status, router]);
-
-  const fetchPendingPrograms = async () => {
+  const fetchPendingPrograms = useCallback(async () => {
     if (!session?.user) return;
 
     try {
@@ -53,7 +41,19 @@ export default function AdminPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [session]);
+
+  useEffect(() => {
+    if (status === 'loading') return;
+
+    if (!session?.user) {
+      router.push('/');
+      return;
+    }
+
+    // Check if user is admin (this should be handled by the backend, but we can add client-side check too)
+    fetchPendingPrograms();
+  }, [session, status, router, fetchPendingPrograms]);
 
   const handleProgramAction = async (programId: number, action: 'approve' | 'reject') => {
     if (!session?.user) return;

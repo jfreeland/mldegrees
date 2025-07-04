@@ -48,3 +48,15 @@ repos:
   #  hooks:
   #    # Run the linter.
   #    - id: zizmor
+
+  # Local hooks for project-specific checks
+  - repo: local
+    hooks:
+      # Test that Docker images can be built successfully
+      - id: test-docker-builds
+        name: Test Docker builds
+        entry: make test-docker-builds
+        language: system
+        files: ^(frontend/.*|backend/.*|.*Dockerfile.*|.*\.dockerignore)$
+        pass_filenames: false
+        stages: [pre-commit]

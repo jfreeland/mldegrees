@@ -1,19 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { metrics } from '@/lib/metrics';
 
 export async function GET(request: NextRequest) {
   try {
-    const promMetrics = await metrics.getMetrics();
-    const register = metrics.getRegister();
+    // Import server metrics only in API route (server-side)
+    const { serverMetrics } = await import('@/lib/server-metrics');
 
-    if (!register) {
-      return new NextResponse('Metrics are not available', { status: 500 });
-    }
+    const promMetrics = await serverMetrics.register.metrics();
 
     return new NextResponse(promMetrics, {
       status: 200,
       headers: {
-        'Content-Type': register.contentType,
+        'Content-Type': serverMetrics.register.contentType,
       },
     });
   } catch (error) {
