@@ -3,9 +3,10 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"time"
 
 	"githib.com/jfreeland/mldegrees/backend/api/internal/models"
-	_ "github.com/lib/pq"
+	"github.com/lib/pq"
 )
 
 type DB struct {
@@ -17,6 +18,11 @@ func New(dataSourceName string) (*DB, error) {
 	if err != nil {
 		return nil, fmt.Errorf("opening database: %w", err)
 	}
+
+	// Configure connection pool to prevent connection issues
+	db.SetMaxOpenConns(25)                 // Maximum number of open connections
+	db.SetMaxIdleConns(5)                  // Maximum number of idle connections
+	db.SetConnMaxLifetime(5 * time.Minute) // Maximum lifetime of a connection
 
 	if err := db.Ping(); err != nil {
 		return nil, fmt.Errorf("connecting to database: %w", err)
@@ -126,6 +132,7 @@ func (db *DB) GetProgramsWithFilters(userID *int, filters *models.ProgramFilters
 	defer rows.Close()
 
 	var programs []models.Program
+	var programIDs []int
 	for rows.Next() {
 		var p models.Program
 		var state sql.NullString
@@ -142,23 +149,54 @@ func (db *DB) GetProgramsWithFilters(userID *int, filters *models.ProgramFilters
 			p.URL = &url.String
 		}
 
-		// Get user's vote if userID is provided
-		if userID != nil {
-			var vote sql.NullInt64
-			err = db.QueryRow("SELECT vote FROM votes WHERE user_id = $1 AND program_id = $2", *userID, p.ID).Scan(&vote)
-			if err != nil && err != sql.ErrNoRows {
-				return nil, fmt.Errorf("getting user vote for userID %d and programID %d: %w", *userID, p.ID, err)
-			}
-			if vote.Valid {
-				v := int(vote.Int64)
-				p.UserVote = &v
-			}
+		programs = append(programs, p)
+		programIDs = append(programIDs, p.ID)
+	}
+
+	// Get all user votes in a single query if userID is provided
+	if userID != nil && len(programIDs) > 0 {
+		userVotes, err := db.getUserVotesForPrograms(*userID, programIDs)
+		if err != nil {
+			return nil, fmt.Errorf("getting user votes: %w", err)
 		}
 
-		programs = append(programs, p)
+		// Map votes to programs
+		for i := range programs {
+			if vote, exists := userVotes[programs[i].ID]; exists {
+				programs[i].UserVote = &vote
+			}
+		}
 	}
 
 	return programs, nil
+}
+
+// getUserVotesForPrograms gets all user votes for a list of program IDs in a single query
+func (db *DB) getUserVotesForPrograms(userID int, programIDs []int) (map[int]int, error) {
+	if len(programIDs) == 0 {
+		return make(map[int]int), nil
+	}
+
+	// Build the query with placeholders for program IDs
+	query := "SELECT program_id, vote FROM votes WHERE user_id = $1 AND program_id = ANY($2)"
+
+	// Convert programIDs to a format PostgreSQL can use
+	rows, err := db.Query(query, userID, pq.Array(programIDs))
+	if err != nil {
+		return nil, fmt.Errorf("querying user votes: %w", err)
+	}
+	defer rows.Close()
+
+	userVotes := make(map[int]int)
+	for rows.Next() {
+		var programID, vote int
+		if err := rows.Scan(&programID, &vote); err != nil {
+			return nil, fmt.Errorf("scanning user vote: %w", err)
+		}
+		userVotes[programID] = vote
+	}
+
+	return userVotes, nil
 }
 
 // CreateOrUpdateUser creates a new user or updates existing one (deprecated, use specific provider methods)
