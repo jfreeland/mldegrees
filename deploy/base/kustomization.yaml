@@ -8,6 +8,7 @@ resources:
   - helmrelease-frontend.yaml
   - helmrelease-backend.yaml
   - helmrelease-ingress.yaml
+  - helmrelease-api-ingress.yaml
   - postgresql-cluster.yaml
   - s3-bucket.yaml
   - servicemonitor-backend.yaml

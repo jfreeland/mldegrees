@@ -1,11 +1,8 @@
 ---
-# TODO: I started 404'ing when I migrated the backend to the more generic
-# chart.  That shouldn't happen.  Need to look into
-# cloudflare-tunnel-ingress-controller.
 apiVersion: helm.toolkit.fluxcd.io/v2beta2
 kind: HelmRelease
 metadata:
-  name: mld
+  name: mld-api
   namespace: mld
 spec:
   interval: 1m0s
@@ -22,15 +19,12 @@ spec:
       className: "cloudflare-tunnel"
       annotations: {}
       hosts:
-        - host: mldegrees.com
-        - host: www.mldegrees.com
-        - host: machinelearningdegrees.com
-        - host: www.machinelearningdegrees.com
+        - host: api.mldegrees.com
       paths:
         - path: /(.*)
           pathType: ImplementationSpecific
           backend:
             service:
-              name: frontend
+              name: backend
               port:
-                number: 3000
+                number: 8080
