@@ -7,6 +7,16 @@ export function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const method = request.method;
   const fullUrl = pathname + search;
+  const hostname = request.headers.get('host') || '';
+
+  // Handle hostname redirects
+  if (hostname === 'www.mldegrees.com' ||
+      hostname === 'machinelearningdegrees.com' ||
+      hostname === 'www.machinelearningdegrees.com') {
+    const redirectUrl = new URL(request.url);
+    redirectUrl.hostname = 'mldegrees.com';
+    return NextResponse.redirect(redirectUrl, 301);
+  }
 
   // Increment in-flight requests
   metrics.incrementInFlight();

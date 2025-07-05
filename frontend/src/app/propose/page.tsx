@@ -42,11 +42,18 @@ export default function ProposePage() {
     setMessage(null);
 
     try {
+      const authToken = (session.user as any).googleId || (session.user as any).githubId;
+
+      if (!authToken || authToken === 'undefined' || authToken === 'null') {
+        setMessage({ type: 'error', text: 'Authentication token is missing. Please sign out and sign back in.' });
+        return;
+      }
+
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/programs/propose`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${(session.user as any).googleId}`,
+          'Authorization': `Bearer ${authToken}`,
         },
         body: JSON.stringify(formData),
       });

@@ -47,7 +47,7 @@ export default function Home() {
       if (session?.user) {
         const user = session.user as any;
         const authToken = user.googleId || user.githubId;
-        if (authToken) {
+        if (authToken && authToken !== 'undefined' && authToken !== 'null') {
           headers['Authorization'] = `Bearer ${authToken}`;
         }
       }
@@ -143,11 +143,12 @@ export default function Home() {
       const currentUni = universities.find(u => u.id === universityId);
       const actualVote = currentUni?.userVote === vote ? 0 : vote; // 0 means remove vote
 
+      const authToken = (session.user as any).googleId || (session.user as any).githubId;
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/vote`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${((session.user as any).googleId || (session.user as any).githubId)}`,
+          ...(authToken && authToken !== 'undefined' && authToken !== 'null' ? { 'Authorization': `Bearer ${authToken}` } : {}),
         },
         body: JSON.stringify({
           program_id: parseInt(universityId),

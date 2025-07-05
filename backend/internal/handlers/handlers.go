@@ -39,11 +39,10 @@ func HandlePrograms(database *db.DB) http.HandlerFunc {
 		// Get programs with filters
 		programs, err := database.GetProgramsWithFilters(userID, filters)
 		if err != nil {
-			log.Printf("Error getting programs with filters: %v", err)
+			log.Printf("Error getting programs with filters (userID: %v, filters: %+v): %v", userID, filters, err)
 			http.Error(w, "Failed to get programs", http.StatusInternalServerError)
 			return
 		}
-
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(programs)
 	}

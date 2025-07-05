@@ -39,31 +39,39 @@ func Middleware(database *db.DB) func(http.Handler) http.Handler {
 			// In production, you'd validate this token with the respective OAuth provider
 			oauthID := token // Simplified for this implementation
 
+			// Log the received token for debugging
+			fmt.Printf("Auth middleware: Received token: '%s'\n", oauthID)
+
+			// Skip authentication if token is empty or "undefined"
+			if oauthID == "" || oauthID == "undefined" || oauthID == "null" {
+				fmt.Printf("Auth middleware: Invalid or empty token, proceeding without authentication\n")
+				next.ServeHTTP(w, r)
+				return
+			}
+
 			// Try to get user by Google ID first, then GitHub ID
 			user, err := database.GetUserByGoogleID(oauthID)
 			if err != nil {
-				fmt.Printf("Auth middleware: Error getting user by Google ID: %v\n", err)
+				fmt.Printf("Auth middleware: Error getting user by Google ID '%s': %v\n", oauthID, err)
 				http.Error(w, "Internal server error", http.StatusInternalServerError)
 				return
 			}
 
 			// If not found by Google ID, try GitHub ID
 			if user == nil {
-
 				user, err = database.GetUserByGitHubID(oauthID)
 				if err != nil {
-					fmt.Printf("Auth middleware: Error getting user by GitHub ID: %v\n", err)
+					fmt.Printf("Auth middleware: Error getting user by GitHub ID '%s': %v\n", oauthID, err)
 					http.Error(w, "Internal server error", http.StatusInternalServerError)
 					return
 				}
 			}
 
 			if user == nil {
-				fmt.Printf("Auth middleware: User not found with OAuth ID: %s\n", oauthID)
+				fmt.Printf("Auth middleware: User not found with OAuth ID: '%s'\n", oauthID)
 				next.ServeHTTP(w, r)
 				return
 			}
-
 			// Add user to context
 			ctx := context.WithValue(r.Context(), UserContextKey, user)
 			next.ServeHTTP(w, r.WithContext(ctx))

@@ -121,7 +121,7 @@ func (db *DB) GetProgramsWithFilters(userID *int, filters *models.ProgramFilters
 
 	rows, err := db.Query(baseQuery, args...)
 	if err != nil {
-		return nil, fmt.Errorf("querying programs: %w", err)
+		return nil, fmt.Errorf("querying programs with query '%s' and args %v: %w", baseQuery, args, err)
 	}
 	defer rows.Close()
 
@@ -147,7 +147,7 @@ func (db *DB) GetProgramsWithFilters(userID *int, filters *models.ProgramFilters
 			var vote sql.NullInt64
 			err = db.QueryRow("SELECT vote FROM votes WHERE user_id = $1 AND program_id = $2", *userID, p.ID).Scan(&vote)
 			if err != nil && err != sql.ErrNoRows {
-				return nil, fmt.Errorf("getting user vote: %w", err)
+				return nil, fmt.Errorf("getting user vote for userID %d and programID %d: %w", *userID, p.ID, err)
 			}
 			if vote.Valid {
 				v := int(vote.Int64)
