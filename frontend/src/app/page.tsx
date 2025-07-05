@@ -85,6 +85,7 @@ export default function Home() {
         country: program.country,
         city: program.city,
         state: program.state,
+        url: program.url,
         status: program.status,
         visibility: program.visibility,
         rating: program.rating,

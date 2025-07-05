@@ -46,6 +46,7 @@ func (db *DB) GetProgramsWithFilters(userID *int, filters *models.ProgramFilters
 			p.country,
 			p.city,
 			p.state,
+			p.url,
 			p.status,
 			p.visibility,
 			p.created_at,
@@ -92,7 +93,7 @@ func (db *DB) GetProgramsWithFilters(userID *int, filters *models.ProgramFilters
 
 	// Add GROUP BY
 	baseQuery += `
-		GROUP BY p.id, p.university_id, p.name, p.description, p.degree_type, p.country, p.city, p.state, p.status, p.visibility, p.created_at, p.updated_at, u.name`
+		GROUP BY p.id, p.university_id, p.name, p.description, p.degree_type, p.country, p.city, p.state, p.url, p.status, p.visibility, p.created_at, p.updated_at, u.name`
 
 	// Add ORDER BY
 	orderBy := "rating DESC, p.id"
@@ -128,13 +129,17 @@ func (db *DB) GetProgramsWithFilters(userID *int, filters *models.ProgramFilters
 	for rows.Next() {
 		var p models.Program
 		var state sql.NullString
-		err := rows.Scan(&p.ID, &p.UniversityID, &p.Name, &p.Description, &p.DegreeType, &p.Country, &p.City, &state, &p.Status, &p.Visibility, &p.CreatedAt, &p.UpdatedAt, &p.UniversityName, &p.Rating)
+		var url sql.NullString
+		err := rows.Scan(&p.ID, &p.UniversityID, &p.Name, &p.Description, &p.DegreeType, &p.Country, &p.City, &state, &url, &p.Status, &p.Visibility, &p.CreatedAt, &p.UpdatedAt, &p.UniversityName, &p.Rating)
 		if err != nil {
 			return nil, fmt.Errorf("scanning program: %w", err)
 		}
 
 		if state.Valid {
 			p.State = &state.String
+		}
+		if url.Valid {
+			p.URL = &url.String
 		}
 
 		// Get user's vote if userID is provided
@@ -370,14 +375,14 @@ func (db *DB) ProposeProgram(req *models.ProposeRequest) (*models.Program, error
 	// Create the program with pending visibility
 	var program models.Program
 	query := `
-		INSERT INTO programs (university_id, name, description, degree_type, country, city, state, status, visibility)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, 'active', 'pending')
-		RETURNING id, university_id, name, description, degree_type, country, city, state, status, visibility, created_at, updated_at
+		INSERT INTO programs (university_id, name, description, degree_type, country, city, state, url, status, visibility)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'active', 'pending')
+		RETURNING id, university_id, name, description, degree_type, country, city, state, url, status, visibility, created_at, updated_at
 	`
 
-	err = tx.QueryRow(query, universityID, req.ProgramName, req.Description, req.DegreeType, req.Country, req.City, req.State).Scan(
+	err = tx.QueryRow(query, universityID, req.ProgramName, req.Description, req.DegreeType, req.Country, req.City, req.State, req.URL).Scan(
 		&program.ID, &program.UniversityID, &program.Name, &program.Description, &program.DegreeType,
-		&program.Country, &program.City, &program.State, &program.Status, &program.Visibility,
+		&program.Country, &program.City, &program.State, &program.URL, &program.Status, &program.Visibility,
 		&program.CreatedAt, &program.UpdatedAt,
 	)
 	if err != nil {
@@ -406,6 +411,7 @@ func (db *DB) GetPendingPrograms() ([]models.Program, error) {
 			p.country,
 			p.city,
 			p.state,
+			p.url,
 			p.status,
 			p.visibility,
 			p.created_at,
@@ -427,13 +433,17 @@ func (db *DB) GetPendingPrograms() ([]models.Program, error) {
 	for rows.Next() {
 		var p models.Program
 		var state sql.NullString
-		err := rows.Scan(&p.ID, &p.UniversityID, &p.Name, &p.Description, &p.DegreeType, &p.Country, &p.City, &state, &p.Status, &p.Visibility, &p.CreatedAt, &p.UpdatedAt, &p.UniversityName)
+		var url sql.NullString
+		err := rows.Scan(&p.ID, &p.UniversityID, &p.Name, &p.Description, &p.DegreeType, &p.Country, &p.City, &state, &url, &p.Status, &p.Visibility, &p.CreatedAt, &p.UpdatedAt, &p.UniversityName)
 		if err != nil {
 			return nil, fmt.Errorf("scanning program: %w", err)
 		}
 
 		if state.Valid {
 			p.State = &state.String
+		}
+		if url.Valid {
+			p.URL = &url.String
 		}
 
 		programs = append(programs, p)

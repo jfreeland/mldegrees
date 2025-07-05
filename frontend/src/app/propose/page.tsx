@@ -19,6 +19,7 @@ export default function ProposePage() {
     country: 'United States',
     city: '',
     state: '',
+    url: '',
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -62,6 +63,7 @@ export default function ProposePage() {
           country: 'United States',
           city: '',
           state: '',
+          url: '',
         });
       } else {
         const error = await response.text();
@@ -240,6 +242,24 @@ export default function ProposePage() {
                   placeholder="e.g., California"
                 />
               </div>
+            </div>
+
+            <div>
+              <label htmlFor="url" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Program URL
+              </label>
+              <input
+                type="url"
+                id="url"
+                name="url"
+                value={formData.url}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                placeholder="e.g., https://university.edu/programs/ml-masters"
+              />
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                Optional: Link to the official program page
+              </p>
             </div>
 
             <div className="flex gap-4 pt-6">

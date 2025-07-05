@@ -7,6 +7,7 @@ export interface University {
   country: string;
   city: string;
   state?: string;
+  url?: string;
   status: string;
   visibility: string;
   rating: number;
@@ -31,6 +32,7 @@ export interface ProposeRequest {
   country: string;
   city: string;
   state?: string;
+  url?: string;
 }
 
 export interface ProposeResponse {

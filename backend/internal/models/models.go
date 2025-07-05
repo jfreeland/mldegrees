@@ -30,6 +30,7 @@ type Program struct {
 	Country        string    `json:"country"`
 	City           string    `json:"city"`
 	State          *string   `json:"state,omitempty"`
+	URL            *string   `json:"url,omitempty"`
 	Status         string    `json:"status"`
 	Visibility     string    `json:"visibility"`
 	CreatedAt      time.Time `json:"created_at"`
@@ -70,6 +71,7 @@ type ProposeRequest struct {
 	Country        string  `json:"country"`
 	City           string  `json:"city"`
 	State          *string `json:"state,omitempty"`
+	URL            *string `json:"url,omitempty"`
 }
 
 type AdminProgramAction struct {

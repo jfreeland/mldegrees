@@ -141,7 +141,7 @@ export default function AdminPage() {
           </div>
         )}
 
-        {pendingPrograms.length === 0 ? (
+        {!pendingPrograms || pendingPrograms.length === 0 ? (
           <div className="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-8 text-center">
             <div className="text-gray-500 dark:text-gray-400 text-lg">
               No pending programs to review

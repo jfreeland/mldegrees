@@ -21,6 +21,7 @@ migrations=(
     "003_add_user_roles.sql"
     "004_add_program_metadata.sql"
     "005_add_github_auth.sql"
+    "006_add_program_url.sql"
 )
 
 for migration in "${migrations[@]}"; do
@@ -43,7 +44,7 @@ echo "Database setup complete!"
 echo ""
 echo "The database now includes:"
 echo "- Users table with role support and GitHub authentication"
-echo "- Universities and programs with full metadata"
+echo "- Universities and programs with full metadata and URLs"
 echo "- Voting system"
 echo "- Filtering and sorting indexes"
-echo "- Sample data for 5 universities with approved programs"
+echo "- Sample data for 5 universities with approved programs including real URLs"

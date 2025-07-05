@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
 	"githib.com/jfreeland/mldegrees/backend/api/internal/auth"
@@ -38,6 +39,7 @@ func HandlePrograms(database *db.DB) http.HandlerFunc {
 		// Get programs with filters
 		programs, err := database.GetProgramsWithFilters(userID, filters)
 		if err != nil {
+			log.Printf("Error getting programs with filters: %v", err)
 			http.Error(w, "Failed to get programs", http.StatusInternalServerError)
 			return
 		}
@@ -76,12 +78,14 @@ func HandleVote(database *db.DB) http.HandlerFunc {
 		// Handle vote removal
 		if req.Vote == 0 {
 			if err := database.RemoveVote(user.ID, req.ProgramID); err != nil {
+				log.Printf("Error removing vote for user %d, program %d: %v", user.ID, req.ProgramID, err)
 				http.Error(w, "Failed to remove vote", http.StatusInternalServerError)
 				return
 			}
 		} else {
 			// Create or update vote
 			if err := database.Vote(user.ID, req.ProgramID, req.Vote); err != nil {
+				log.Printf("Error voting for user %d, program %d, vote %d: %v", user.ID, req.ProgramID, req.Vote, err)
 				http.Error(w, "Failed to vote", http.StatusInternalServerError)
 				return
 			}
@@ -120,10 +124,10 @@ func HandleLocalAuth(database *db.DB) http.HandlerFunc {
 		name := "Local " + req.Role
 		user, err := database.CreateLocalUser(email, name, req.Role)
 		if err != nil {
+			log.Printf("Error creating local user with role %s: %v", req.Role, err)
 			http.Error(w, "Failed to create local user", http.StatusInternalServerError)
 			return
 		}
-
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]interface{}{
 			"user":    user,
@@ -175,6 +179,7 @@ func HandleProposeProgram(database *db.DB) http.HandlerFunc {
 		// Create the program proposal
 		program, err := database.ProposeProgram(&req)
 		if err != nil {
+			log.Printf("Error creating program proposal for %s - %s: %v", req.UniversityName, req.ProgramName, err)
 			http.Error(w, "Failed to create program proposal", http.StatusInternalServerError)
 			return
 		}
@@ -203,10 +208,10 @@ func HandleAdminPrograms(database *db.DB) http.HandlerFunc {
 
 		programs, err := database.GetPendingPrograms()
 		if err != nil {
+			log.Printf("Error getting pending programs: %v", err)
 			http.Error(w, "Failed to get pending programs", http.StatusInternalServerError)
 			return
 		}
-
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(programs)
 	}
@@ -247,10 +252,10 @@ func HandleAdminProgramAction(database *db.DB) http.HandlerFunc {
 		// Update program visibility
 		err := database.UpdateProgramVisibility(req.ProgramID, visibility)
 		if err != nil {
+			log.Printf("Error updating program %d visibility to %s: %v", req.ProgramID, visibility, err)
 			http.Error(w, "Failed to update program status", http.StatusInternalServerError)
 			return
 		}
-
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]interface{}{
 			"message": fmt.Sprintf("Program %s successfully", req.Action+"d"),
