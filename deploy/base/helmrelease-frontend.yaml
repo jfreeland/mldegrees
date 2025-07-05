@@ -19,7 +19,7 @@ spec:
     image:
       repository: joeyfreeland/mldfe
       pullPolicy: Always
-      tag: 1.3.0
+      tag: 1.3.1
     imagePullSecrets:
       - name: dockerhub
     serviceAccount:
