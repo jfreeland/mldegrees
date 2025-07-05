@@ -93,6 +93,10 @@ const handler = NextAuth({
           if (!response.ok) {
             return false;
           }
+
+          // Get user data including role from backend response
+          const userData = await response.json();
+          (user as any).role = userData.role;
         } catch (error) {
           console.error('Failed to sync user with backend:', error);
           return false;
@@ -115,6 +119,10 @@ const handler = NextAuth({
           if (!response.ok) {
             return false;
           }
+
+          // Get user data including role from backend response
+          const userData = await response.json();
+          (user as any).role = userData.role;
         } catch (error) {
           console.error('Failed to sync user with backend:', error);
           return false;
@@ -127,8 +135,10 @@ const handler = NextAuth({
       if (account) {
         if (account.provider === "google") {
           token.googleId = account.providerAccountId;
+          token.role = (user as any).role;
         } else if (account.provider === "github") {
           token.githubId = account.providerAccountId;
+          token.role = (user as any).role;
         } else if (account.provider === "local-user" || account.provider === "local-admin") {
           token.googleId = (user as any).googleId;
           token.role = (user as any).role;
