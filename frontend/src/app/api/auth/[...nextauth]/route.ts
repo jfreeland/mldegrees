@@ -78,7 +78,8 @@ const handler = NextAuth({
       if (account?.provider === "google") {
         try {
           // Send user data to our backend
-           const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth`, {            method: 'POST',
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth`, {
+            method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
@@ -103,7 +104,8 @@ const handler = NextAuth({
       } else if (account?.provider === "github") {
         try {
           // Send user data to our backend
-           const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth`, {            method: 'POST',
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth`, {
+            method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
