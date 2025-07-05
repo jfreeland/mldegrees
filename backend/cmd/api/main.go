@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"path/filepath"
 
 	"githib.com/jfreeland/mldegrees/backend/api/internal/auth"
 	"githib.com/jfreeland/mldegrees/backend/api/internal/config"
@@ -24,6 +25,14 @@ func main() {
 
 	fmt.Println("Starting ML Degrees API server...")
 	fmt.Println("Connected to database successfully")
+
+	// Run database migrations
+	fmt.Println("Running database migrations...")
+	migrationsDir := filepath.Join(".", "migrations")
+	if err := database.RunMigrations(migrationsDir); err != nil {
+		log.Fatalf("Failed to run migrations: %v", err)
+	}
+	fmt.Println("Database migrations completed")
 
 	// Create a new router for the application
 	appMux := http.NewServeMux()

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"githib.com/jfreeland/mldegrees/backend/api/internal/migration"
 	"githib.com/jfreeland/mldegrees/backend/api/internal/models"
 	"github.com/lib/pq"
 )
@@ -29,6 +30,12 @@ func New(dataSourceName string) (*DB, error) {
 	}
 
 	return &DB{db}, nil
+}
+
+// RunMigrations runs all pending database migrations
+func (db *DB) RunMigrations(migrationsDir string) error {
+	migrator := migration.New(db.DB, migrationsDir)
+	return migrator.RunPendingMigrations()
 }
 
 func (db *DB) Close() error {
