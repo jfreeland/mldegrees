@@ -263,6 +263,125 @@ func HandleAdminProgramAction(database *db.DB) http.HandlerFunc {
 	}
 }
 
+// HandleAdminAllPrograms returns all programs for admin management
+func HandleAdminAllPrograms(database *db.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		user := auth.GetUserFromContext(r.Context())
+		if user == nil || user.Role != "admin" {
+			http.Error(w, "Forbidden: Admin access required", http.StatusForbidden)
+			return
+		}
+
+		programs, err := database.GetAllPrograms()
+		if err != nil {
+			log.Printf("Error getting all programs: %v", err)
+			http.Error(w, "Failed to get programs", http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(programs)
+	}
+}
+
+// HandleAdminGetProgram returns a single program for editing
+func HandleAdminGetProgram(database *db.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		user := auth.GetUserFromContext(r.Context())
+		if user == nil || user.Role != "admin" {
+			http.Error(w, "Forbidden: Admin access required", http.StatusForbidden)
+			return
+		}
+
+		// Get program ID from URL path
+		programIDStr := r.URL.Path[len("/api/admin/programs/"):]
+		if programIDStr == "" {
+			http.Error(w, "Program ID required", http.StatusBadRequest)
+			return
+		}
+
+		programID := 0
+		if _, err := fmt.Sscanf(programIDStr, "%d", &programID); err != nil {
+			http.Error(w, "Invalid program ID", http.StatusBadRequest)
+			return
+		}
+
+		program, err := database.GetProgramByID(programID)
+		if err != nil {
+			log.Printf("Error getting program %d: %v", programID, err)
+			http.Error(w, "Failed to get program", http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(program)
+	}
+}
+
+// HandleAdminUpdateProgram handles updating program details
+func HandleAdminUpdateProgram(database *db.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPut {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		user := auth.GetUserFromContext(r.Context())
+		if user == nil || user.Role != "admin" {
+			http.Error(w, "Forbidden: Admin access required", http.StatusForbidden)
+			return
+		}
+
+		var req models.ProgramUpdateRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, "Invalid request body", http.StatusBadRequest)
+			return
+		}
+
+		// Validate required fields
+		if req.UniversityName == "" || req.Name == "" || req.Description == "" {
+			http.Error(w, "University name, program name, and description are required", http.StatusBadRequest)
+			return
+		}
+
+		if req.DegreeType == "" {
+			req.DegreeType = "masters" // Default value
+		}
+
+		if req.Country == "" {
+			req.Country = "United States" // Default value
+		}
+
+		if req.City == "" {
+			http.Error(w, "City is required", http.StatusBadRequest)
+			return
+		}
+
+		// Update the program
+		program, err := database.UpdateProgram(&req)
+		if err != nil {
+			log.Printf("Error updating program %d: %v", req.ID, err)
+			http.Error(w, "Failed to update program", http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"program": program,
+			"message": "Program updated successfully",
+		})
+	}
+}
+
 // EnableCORS adds CORS headers to responses
 func EnableCORS(next http.HandlerFunc) http.HandlerFunc {
 	allowedOrigins := []string{

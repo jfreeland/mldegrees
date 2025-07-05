@@ -53,6 +53,9 @@ func main() {
 	// Admin endpoints (require admin role)
 	appMux.HandleFunc("/api/admin/programs", handlers.EnableCORS(auth.RequireAdmin(handlers.HandleAdminPrograms(database))))
 	appMux.HandleFunc("/api/admin/programs/action", handlers.EnableCORS(auth.RequireAdmin(handlers.HandleAdminProgramAction(database))))
+	appMux.HandleFunc("/api/admin/programs/all", handlers.EnableCORS(auth.RequireAdmin(handlers.HandleAdminAllPrograms(database))))
+	appMux.HandleFunc("/api/admin/programs/", handlers.EnableCORS(auth.RequireAdmin(handlers.HandleAdminGetProgram(database))))
+	appMux.HandleFunc("/api/admin/programs/update", handlers.EnableCORS(auth.RequireAdmin(handlers.HandleAdminUpdateProgram(database))))
 
 	// Create the main router
 	mainMux := http.NewServeMux()

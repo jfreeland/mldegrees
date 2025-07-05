@@ -4,6 +4,25 @@ import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { University } from '@/types/university';
+import ProgramEditForm from '@/components/ProgramEditForm';
+
+interface Program {
+  id: number;
+  university_id: number;
+  name: string;
+  description: string;
+  degree_type: string;
+  country: string;
+  city: string;
+  state?: string;
+  url?: string;
+  status: string;
+  visibility: string;
+  created_at: string;
+  updated_at: string;
+  university_name: string;
+  rating?: number;
+}
 
 interface AdminProgramAction {
   program_id: number;
@@ -14,9 +33,12 @@ export default function AdminPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [pendingPrograms, setPendingPrograms] = useState<University[]>([]);
+  const [allPrograms, setAllPrograms] = useState<Program[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [activeTab, setActiveTab] = useState<'pending' | 'all'>('pending');
+  const [editingProgram, setEditingProgram] = useState<Program | null>(null);
 
   const fetchPendingPrograms = useCallback(async () => {
     if (!session?.user) return;
@@ -33,13 +55,42 @@ export default function AdminPage() {
         setPendingPrograms(programs);
       } else if (response.status === 403) {
         setMessage({ type: 'error', text: 'Access denied. Admin privileges required.' });
+        setPendingPrograms([]);
       } else {
         setMessage({ type: 'error', text: 'Failed to fetch pending programs.' });
+        setPendingPrograms([]);
       }
     } catch (error) {
       setMessage({ type: 'error', text: 'An error occurred while fetching programs.' });
+      setPendingPrograms([]);
     } finally {
       setLoading(false);
+    }
+  }, [session]);
+
+  const fetchAllPrograms = useCallback(async () => {
+    if (!session?.user) return;
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/admin/programs/all`, {
+        headers: {
+          'Authorization': `Bearer ${(session.user as any).googleId}`,
+        },
+      });
+
+      if (response.ok) {
+        const programs = await response.json();
+        setAllPrograms(programs);
+      } else if (response.status === 403) {
+        setMessage({ type: 'error', text: 'Access denied. Admin privileges required.' });
+        setAllPrograms([]);
+      } else {
+        setMessage({ type: 'error', text: 'Failed to fetch all programs.' });
+        setAllPrograms([]);
+      }
+    } catch (error) {
+      setMessage({ type: 'error', text: 'An error occurred while fetching programs.' });
+      setAllPrograms([]);
     }
   }, [session]);
 
@@ -53,7 +104,8 @@ export default function AdminPage() {
 
     // Check if user is admin (this should be handled by the backend, but we can add client-side check too)
     fetchPendingPrograms();
-  }, [session, status, router, fetchPendingPrograms]);
+    fetchAllPrograms();
+  }, [session, status, router, fetchPendingPrograms, fetchAllPrograms]);
 
   const handleProgramAction = async (programId: number, action: 'approve' | 'reject') => {
     if (!session?.user) return;
@@ -79,6 +131,8 @@ export default function AdminPage() {
         setMessage({ type: 'success', text: result.message });
         // Remove the program from the pending list
         setPendingPrograms(prev => prev.filter(p => parseInt(p.id) !== programId));
+        // Refresh all programs to show updated status
+        fetchAllPrograms();
       } else {
         const error = await response.text();
         setMessage({ type: 'error', text: error || `Failed to ${action} program.` });
@@ -87,6 +141,35 @@ export default function AdminPage() {
       setMessage({ type: 'error', text: `An error occurred while ${action}ing the program.` });
     } finally {
       setActionLoading(null);
+    }
+  };
+
+  const handleEditProgram = (program: Program) => {
+    setEditingProgram(program);
+  };
+
+  const handleSaveProgram = (updatedProgram: Program) => {
+    setMessage({ type: 'success', text: 'Program updated successfully' });
+    setEditingProgram(null);
+    // Refresh both lists
+    fetchPendingPrograms();
+    fetchAllPrograms();
+  };
+
+  const handleCancelEdit = () => {
+    setEditingProgram(null);
+  };
+
+  const getStatusBadge = (visibility: string) => {
+    switch (visibility) {
+      case 'approved':
+        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
+      case 'rejected':
+        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+      default:
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
     }
   };
 
@@ -127,8 +210,36 @@ export default function AdminPage() {
             Admin Dashboard
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-2">
-            Review and manage pending program proposals
+            Review and manage program proposals
           </p>
+        </div>
+
+        {/* Tab Navigation */}
+        <div className="mb-6">
+          <div className="border-b border-gray-200 dark:border-gray-700">
+            <nav className="-mb-px flex space-x-8">
+              <button
+                onClick={() => setActiveTab('pending')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'pending'
+                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+                }`}
+              >
+                Pending Programs ({pendingPrograms?.length || 0})
+              </button>
+              <button
+                onClick={() => setActiveTab('all')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'all'
+                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+                }`}
+              >
+                All Programs ({allPrograms?.length || 0})
+              </button>
+            </nav>
+          </div>
         </div>
 
         {message && (
@@ -141,75 +252,181 @@ export default function AdminPage() {
           </div>
         )}
 
-        {!pendingPrograms || pendingPrograms.length === 0 ? (
-          <div className="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-8 text-center">
-            <div className="text-gray-500 dark:text-gray-400 text-lg">
-              No pending programs to review
-            </div>
-            <p className="text-gray-400 dark:text-gray-500 mt-2">
-              All program proposals have been processed.
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {pendingPrograms.map((program) => (
-              <div key={program.id} className="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6">
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex-1">
-                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                      {program.programName}
-                    </h2>
-                    <p className="text-lg text-gray-700 dark:text-gray-300 mt-1">
-                      {program.name}
-                    </p>
-                  </div>
-                  <div className="flex gap-2 ml-4">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                      {program.degreeType}
-                    </span>
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
-                      Pending Review
-                    </span>
-                  </div>
+        {/* Pending Programs Tab */}
+        {activeTab === 'pending' && (
+          <>
+            {!pendingPrograms || pendingPrograms.length === 0 ? (
+              <div className="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-8 text-center">
+                <div className="text-gray-500 dark:text-gray-400 text-lg">
+                  No pending programs to review
                 </div>
+                <p className="text-gray-400 dark:text-gray-500 mt-2">
+                  All program proposals have been processed.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {pendingPrograms.map((program) => (
+                  <div key={program.id} className="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6">
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="flex-1">
+                        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                          {program.programName}
+                        </h2>
+                        <p className="text-lg text-gray-700 dark:text-gray-300 mt-1">
+                          {program.name}
+                        </p>
+                      </div>
+                      <div className="flex gap-2 ml-4">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                          {program.degreeType}
+                        </span>
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+                          Pending Review
+                        </span>
+                      </div>
+                    </div>
 
-                <div className="mb-4">
-                  <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-                    {program.description}
-                  </p>
-                </div>
+                    <div className="mb-4">
+                      <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+                        {program.description}
+                      </p>
+                    </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
-                    <span className="flex items-center">
-                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      {program.city}{program.state && `, ${program.state}`}, {program.country}
-                    </span>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
+                        <span className="flex items-center">
+                          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                          </svg>
+                          {program.city}{program.state && `, ${program.state}`}, {program.country}
+                        </span>
+                      </div>
+
+                      <div className="flex gap-3">
+                        <button
+                          onClick={() => handleProgramAction(parseInt(program.id), 'reject')}
+                          disabled={actionLoading === parseInt(program.id)}
+                          className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white rounded-lg font-medium transition-colors"
+                        >
+                          {actionLoading === parseInt(program.id) ? 'Processing...' : 'Reject'}
+                        </button>
+                        <button
+                          onClick={() => handleProgramAction(parseInt(program.id), 'approve')}
+                          disabled={actionLoading === parseInt(program.id)}
+                          className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white rounded-lg font-medium transition-colors"
+                        >
+                          {actionLoading === parseInt(program.id) ? 'Processing...' : 'Approve'}
+                        </button>
+                      </div>
+                    </div>
                   </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
 
-                  <div className="flex gap-3">
-                    <button
-                      onClick={() => handleProgramAction(parseInt(program.id), 'reject')}
-                      disabled={actionLoading === parseInt(program.id)}
-                      className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white rounded-lg font-medium transition-colors"
-                    >
-                      {actionLoading === parseInt(program.id) ? 'Processing...' : 'Reject'}
-                    </button>
-                    <button
-                      onClick={() => handleProgramAction(parseInt(program.id), 'approve')}
-                      disabled={actionLoading === parseInt(program.id)}
-                      className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white rounded-lg font-medium transition-colors"
-                    >
-                      {actionLoading === parseInt(program.id) ? 'Processing...' : 'Approve'}
-                    </button>
-                  </div>
+        {/* All Programs Tab */}
+        {activeTab === 'all' && (
+          <>
+            {!allPrograms || allPrograms.length === 0 ? (
+              <div className="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-8 text-center">
+                <div className="text-gray-500 dark:text-gray-400 text-lg">
+                  No programs found
                 </div>
               </div>
-            ))}
-          </div>
+            ) : (
+              <div className="space-y-6">
+                {allPrograms.map((program) => (
+                  <div key={program.id} className="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6">
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="flex-1">
+                        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                          {program.name}
+                        </h2>
+                        <p className="text-lg text-gray-700 dark:text-gray-300 mt-1">
+                          {program.university_name}
+                        </p>
+                      </div>
+                      <div className="flex gap-2 ml-4">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                          {program.degree_type}
+                        </span>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(program.visibility)}`}>
+                          {program.visibility.charAt(0).toUpperCase() + program.visibility.slice(1)}
+                        </span>
+                        {program.rating !== undefined && (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+                            Rating: {program.rating}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="mb-4">
+                      <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+                        {program.description}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
+                        <span className="flex items-center">
+                          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                          </svg>
+                          {program.city}{program.state && `, ${program.state}`}, {program.country}
+                        </span>
+                        {program.url && (
+                          <a
+                            href={program.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                          >
+                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            </svg>
+                            Program URL
+                          </a>
+                        )}
+                      </div>
+
+                      <div className="flex gap-3">
+                        <button
+                          onClick={() => handleEditProgram(program)}
+                          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                        >
+                          Edit
+                        </button>
+                        {program.visibility === 'pending' && (
+                          <>
+                            <button
+                              onClick={() => handleProgramAction(program.id, 'reject')}
+                              disabled={actionLoading === program.id}
+                              className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white rounded-lg font-medium transition-colors"
+                            >
+                              {actionLoading === program.id ? 'Processing...' : 'Reject'}
+                            </button>
+                            <button
+                              onClick={() => handleProgramAction(program.id, 'approve')}
+                              disabled={actionLoading === program.id}
+                              className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white rounded-lg font-medium transition-colors"
+                            >
+                              {actionLoading === program.id ? 'Processing...' : 'Approve'}
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
         )}
 
         <div className="mt-8 text-center">
@@ -221,6 +438,15 @@ export default function AdminPage() {
           </button>
         </div>
       </div>
+
+      {/* Edit Program Modal */}
+      {editingProgram && (
+        <ProgramEditForm
+          program={editingProgram}
+          onSave={handleSaveProgram}
+          onCancel={handleCancelEdit}
+        />
+      )}
     </div>
   );
 }

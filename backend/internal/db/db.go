@@ -513,3 +513,157 @@ func (db *DB) UpdateProgramVisibility(programID int, visibility string) error {
 
 	return nil
 }
+
+// GetProgramByID returns a single program by ID for editing
+func (db *DB) GetProgramByID(programID int) (*models.Program, error) {
+	query := `
+		SELECT
+			p.id,
+			p.university_id,
+			p.name,
+			p.description,
+			p.degree_type,
+			p.country,
+			p.city,
+			p.state,
+			p.url,
+			p.status,
+			p.visibility,
+			p.created_at,
+			p.updated_at,
+			u.name as university_name
+		FROM programs p
+		JOIN universities u ON p.university_id = u.id
+		WHERE p.id = $1
+	`
+
+	var p models.Program
+	var state sql.NullString
+	var url sql.NullString
+	err := db.QueryRow(query, programID).Scan(
+		&p.ID, &p.UniversityID, &p.Name, &p.Description, &p.DegreeType,
+		&p.Country, &p.City, &state, &url, &p.Status, &p.Visibility,
+		&p.CreatedAt, &p.UpdatedAt, &p.UniversityName,
+	)
+	if err == sql.ErrNoRows {
+		return nil, fmt.Errorf("program not found")
+	}
+	if err != nil {
+		return nil, fmt.Errorf("getting program: %w", err)
+	}
+
+	if state.Valid {
+		p.State = &state.String
+	}
+	if url.Valid {
+		p.URL = &url.String
+	}
+
+	return &p, nil
+}
+
+// UpdateProgram updates a program's details
+func (db *DB) UpdateProgram(req *models.ProgramUpdateRequest) (*models.Program, error) {
+	tx, err := db.Begin()
+	if err != nil {
+		return nil, fmt.Errorf("beginning transaction: %w", err)
+	}
+	defer tx.Rollback()
+
+	// First, find or create the university
+	var universityID int
+	err = tx.QueryRow("SELECT id FROM universities WHERE name = $1", req.UniversityName).Scan(&universityID)
+	if err == sql.ErrNoRows {
+		// Create new university
+		err = tx.QueryRow("INSERT INTO universities (name) VALUES ($1) RETURNING id", req.UniversityName).Scan(&universityID)
+		if err != nil {
+			return nil, fmt.Errorf("creating university: %w", err)
+		}
+	} else if err != nil {
+		return nil, fmt.Errorf("finding university: %w", err)
+	}
+
+	// Update the program
+	query := `
+		UPDATE programs
+		SET university_id = $1, name = $2, description = $3, degree_type = $4,
+		    country = $5, city = $6, state = $7, url = $8, updated_at = CURRENT_TIMESTAMP
+		WHERE id = $9
+		RETURNING id, university_id, name, description, degree_type, country, city, state, url, status, visibility, created_at, updated_at
+	`
+
+	var program models.Program
+	err = tx.QueryRow(query, universityID, req.Name, req.Description, req.DegreeType, req.Country, req.City, req.State, req.URL, req.ID).Scan(
+		&program.ID, &program.UniversityID, &program.Name, &program.Description, &program.DegreeType,
+		&program.Country, &program.City, &program.State, &program.URL, &program.Status, &program.Visibility,
+		&program.CreatedAt, &program.UpdatedAt,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("updating program: %w", err)
+	}
+
+	// Set university name for the response
+	program.UniversityName = req.UniversityName
+
+	if err = tx.Commit(); err != nil {
+		return nil, fmt.Errorf("committing transaction: %w", err)
+	}
+
+	return &program, nil
+}
+
+// GetAllPrograms returns all programs (approved, pending, rejected) for admin management
+func (db *DB) GetAllPrograms() ([]models.Program, error) {
+	query := `
+		SELECT
+			p.id,
+			p.university_id,
+			p.name,
+			p.description,
+			p.degree_type,
+			p.country,
+			p.city,
+			p.state,
+			p.url,
+			p.status,
+			p.visibility,
+			p.created_at,
+			p.updated_at,
+			u.name as university_name,
+			COALESCE(SUM(v.vote), 0) as rating
+		FROM programs p
+		JOIN universities u ON p.university_id = u.id
+		LEFT JOIN votes v ON p.id = v.program_id
+		WHERE p.status = 'active'
+		GROUP BY p.id, p.university_id, p.name, p.description, p.degree_type, p.country, p.city, p.state, p.url, p.status, p.visibility, p.created_at, p.updated_at, u.name
+		ORDER BY p.visibility, p.created_at DESC
+	`
+
+	rows, err := db.Query(query)
+	if err != nil {
+		return nil, fmt.Errorf("querying all programs: %w", err)
+	}
+	defer rows.Close()
+
+	var programs []models.Program
+	for rows.Next() {
+		var p models.Program
+		var state sql.NullString
+		var url sql.NullString
+		err := rows.Scan(&p.ID, &p.UniversityID, &p.Name, &p.Description, &p.DegreeType, &p.Country, &p.City, &state, &url, &p.Status, &p.Visibility, &p.CreatedAt, &p.UpdatedAt, &p.UniversityName, &p.Rating)
+		if err != nil {
+			return nil, fmt.Errorf("scanning program: %w", err)
+		}
+
+		if state.Valid {
+			p.State = &state.String
+		}
+		if url.Valid {
+			p.URL = &url.String
+		}
+
+		programs = append(programs, p)
+	}
+
+	return programs, nil
+}
