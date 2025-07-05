@@ -61,6 +61,16 @@ spec:
           secretKeyRef:
             name: frontend-secrets
             key: google-client-secret
+      - name: GITHUB_CLIENT_ID
+        valueFrom:
+          secretKeyRef:
+            name: frontend-secrets
+            key: github-client-id
+      - name: GITHUB_CLIENT_SECRET
+        valueFrom:
+          secretKeyRef:
+            name: frontend-secrets
+            key: github-client-secret
       - name: AUTH_SECRET
         valueFrom:
           secretKeyRef:

@@ -44,8 +44,12 @@ export default function Home() {
       };
 
       // Add auth header if user is signed in
-      if (session?.user && (session.user as any).googleId) {
-        headers['Authorization'] = `Bearer ${(session.user as any).googleId}`;
+      if (session?.user) {
+        const user = session.user as any;
+        const authToken = user.googleId || user.githubId;
+        if (authToken) {
+          headers['Authorization'] = `Bearer ${authToken}`;
+        }
       }
 
       // Build query parameters
@@ -142,7 +146,7 @@ export default function Home() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${(session.user as any).googleId}`,
+          'Authorization': `Bearer ${((session.user as any).googleId || (session.user as any).githubId)}`,
         },
         body: JSON.stringify({
           program_id: parseInt(universityId),
@@ -181,7 +185,7 @@ export default function Home() {
       {!session && (
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
           <p className="text-blue-800 dark:text-blue-200">
-            Sign in with Google to vote on programs and help others find the best ML degrees!
+            Sign in with Google or GitHub to vote on programs and help others find the best ML degrees!
           </p>
         </div>
       )}

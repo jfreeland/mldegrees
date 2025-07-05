@@ -35,18 +35,31 @@ func Middleware(database *db.DB) func(http.Handler) http.Handler {
 
 			token := parts[1]
 
-			// For now, we'll trust the frontend's token which should contain the Google ID
-			// In production, you'd validate this token with Google
-			googleID := token // Simplified for this implementation
+			// For now, we'll trust the frontend's token which should contain the OAuth ID
+			// In production, you'd validate this token with the respective OAuth provider
+			oauthID := token // Simplified for this implementation
 
-			// Get user from database
-			user, err := database.GetUserByGoogleID(googleID)
+			// Try to get user by Google ID first, then GitHub ID
+			user, err := database.GetUserByGoogleID(oauthID)
 			if err != nil {
+				fmt.Printf("Auth middleware: Error getting user by Google ID: %v\n", err)
 				http.Error(w, "Internal server error", http.StatusInternalServerError)
 				return
 			}
 
+			// If not found by Google ID, try GitHub ID
 			if user == nil {
+
+				user, err = database.GetUserByGitHubID(oauthID)
+				if err != nil {
+					fmt.Printf("Auth middleware: Error getting user by GitHub ID: %v\n", err)
+					http.Error(w, "Internal server error", http.StatusInternalServerError)
+					return
+				}
+			}
+
+			if user == nil {
+				fmt.Printf("Auth middleware: User not found with OAuth ID: %s\n", oauthID)
 				next.ServeHTTP(w, r)
 				return
 			}
@@ -107,19 +120,39 @@ func HandleAuth(database *db.DB) http.HandlerFunc {
 			Email    string `json:"email"`
 			Name     string `json:"name"`
 			GoogleID string `json:"google_id"`
+			GitHubID string `json:"github_id"`
 		}
-
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			http.Error(w, "Invalid request body", http.StatusBadRequest)
 			return
 		}
 
+		fmt.Printf("Auth handler: Received request - Email: %s, Name: %s, GoogleID: %s, GitHubID: %s\n",
+			req.Email, req.Name, req.GoogleID, req.GitHubID)
+
 		// Create or update user
-		user, err := database.CreateOrUpdateUser(req.Email, req.Name, req.GoogleID)
+		var user *models.User
+		var err error
+
+		if req.GoogleID != "" {
+			fmt.Printf("Auth handler: Creating/updating user with Google ID: %s\n", req.GoogleID)
+			user, err = database.CreateOrUpdateUserWithGoogle(req.Email, req.Name, req.GoogleID)
+		} else if req.GitHubID != "" {
+			fmt.Printf("Auth handler: Creating/updating user with GitHub ID: %s\n", req.GitHubID)
+			user, err = database.CreateOrUpdateUserWithGitHub(req.Email, req.Name, req.GitHubID)
+		} else {
+			fmt.Printf("Auth handler: No OAuth ID provided\n")
+			http.Error(w, "Either google_id or github_id must be provided", http.StatusBadRequest)
+			return
+		}
+
 		if err != nil {
+			fmt.Printf("Auth handler: Error creating/updating user: %v\n", err)
 			http.Error(w, fmt.Sprintf("Failed to create/update user: %v", err), http.StatusInternalServerError)
 			return
 		}
+
+		fmt.Printf("Auth handler: Successfully created/updated user: %d (%s)\\n", user.ID, user.Email)
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(user)

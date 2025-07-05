@@ -11,32 +11,38 @@ if [ -z "$DATABASE_URL" ]; then
     exit 1
 fi
 
-# Run complete schema migration
-echo "Creating database schema..."
-psql $DATABASE_URL < migrations/001_complete_schema.sql
+# Run all migrations in order
+echo "Running migrations..."
 
-if [ $? -eq 0 ]; then
-    echo "✓ Schema created successfully"
-else
-    echo "✗ Failed to create schema"
-    exit 1
-fi
+# List of migrations to run in order
+migrations=(
+    "001_complete_schema.sql"
+    "002_seed_data.sql"
+    "003_add_user_roles.sql"
+    "004_add_program_metadata.sql"
+    "005_add_github_auth.sql"
+)
 
-# Seed data
-echo "Seeding data..."
-psql $DATABASE_URL < migrations/002_seed_data.sql
+for migration in "${migrations[@]}"; do
+    if [ -f "migrations/$migration" ]; then
+        echo "Running migration: $migration"
+        psql $DATABASE_URL < "migrations/$migration"
 
-if [ $? -eq 0 ]; then
-    echo "✓ Data seeded successfully"
-else
-    echo "✗ Failed to seed data"
-    exit 1
-fi
+        if [ $? -eq 0 ]; then
+            echo "✓ $migration completed successfully"
+        else
+            echo "✗ Failed to run $migration"
+            exit 1
+        fi
+    else
+        echo "⚠ Migration file not found: $migration (skipping)"
+    fi
+done
 
 echo "Database setup complete!"
 echo ""
 echo "The database now includes:"
-echo "- Users table with role support"
+echo "- Users table with role support and GitHub authentication"
 echo "- Universities and programs with full metadata"
 echo "- Voting system"
 echo "- Filtering and sorting indexes"

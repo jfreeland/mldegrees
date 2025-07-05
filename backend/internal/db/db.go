@@ -156,8 +156,13 @@ func (db *DB) GetProgramsWithFilters(userID *int, filters *models.ProgramFilters
 	return programs, nil
 }
 
-// CreateOrUpdateUser creates a new user or updates existing one
+// CreateOrUpdateUser creates a new user or updates existing one (deprecated, use specific provider methods)
 func (db *DB) CreateOrUpdateUser(email, name, googleID string) (*models.User, error) {
+	return db.CreateOrUpdateUserWithGoogle(email, name, googleID)
+}
+
+// CreateOrUpdateUserWithGoogle creates a new user or updates existing one with Google OAuth
+func (db *DB) CreateOrUpdateUserWithGoogle(email, name, googleID string) (*models.User, error) {
 	var user models.User
 
 	query := `
@@ -168,14 +173,55 @@ func (db *DB) CreateOrUpdateUser(email, name, googleID string) (*models.User, er
 			email = EXCLUDED.email,
 			name = EXCLUDED.name,
 			updated_at = CURRENT_TIMESTAMP
-		RETURNING id, email, name, google_id, role, created_at, updated_at
+		RETURNING id, email, name, google_id, github_id, role, created_at, updated_at
 	`
 
+	var googleIDPtr, githubIDPtr sql.NullString
 	err := db.QueryRow(query, email, name, googleID).Scan(
-		&user.ID, &user.Email, &user.Name, &user.GoogleID, &user.Role, &user.CreatedAt, &user.UpdatedAt,
+		&user.ID, &user.Email, &user.Name, &googleIDPtr, &githubIDPtr, &user.Role, &user.CreatedAt, &user.UpdatedAt,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("creating/updating user: %w", err)
+	}
+
+	if googleIDPtr.Valid {
+		user.GoogleID = &googleIDPtr.String
+	}
+	if githubIDPtr.Valid {
+		user.GitHubID = &githubIDPtr.String
+	}
+
+	return &user, nil
+}
+
+// CreateOrUpdateUserWithGitHub creates a new user or updates existing one with GitHub OAuth
+func (db *DB) CreateOrUpdateUserWithGitHub(email, name, githubID string) (*models.User, error) {
+	var user models.User
+
+	query := `
+		INSERT INTO users (email, name, github_id, role)
+		VALUES ($1, $2, $3, 'user')
+		ON CONFLICT (github_id)
+		DO UPDATE SET
+			email = EXCLUDED.email,
+			name = EXCLUDED.name,
+			updated_at = CURRENT_TIMESTAMP
+		RETURNING id, email, name, google_id, github_id, role, created_at, updated_at
+	`
+
+	var googleIDPtr, githubIDPtr sql.NullString
+	err := db.QueryRow(query, email, name, githubID).Scan(
+		&user.ID, &user.Email, &user.Name, &googleIDPtr, &githubIDPtr, &user.Role, &user.CreatedAt, &user.UpdatedAt,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("creating/updating user: %w", err)
+	}
+
+	if googleIDPtr.Valid {
+		user.GoogleID = &googleIDPtr.String
+	}
+	if githubIDPtr.Valid {
+		user.GitHubID = &githubIDPtr.String
 	}
 
 	return &user, nil
@@ -185,15 +231,49 @@ func (db *DB) CreateOrUpdateUser(email, name, googleID string) (*models.User, er
 func (db *DB) GetUserByGoogleID(googleID string) (*models.User, error) {
 	var user models.User
 
-	query := `SELECT id, email, name, google_id, role, created_at, updated_at FROM users WHERE google_id = $1`
+	query := `SELECT id, email, name, google_id, github_id, role, created_at, updated_at FROM users WHERE google_id = $1`
+	var googleIDPtr, githubIDPtr sql.NullString
 	err := db.QueryRow(query, googleID).Scan(
-		&user.ID, &user.Email, &user.Name, &user.GoogleID, &user.Role, &user.CreatedAt, &user.UpdatedAt,
+		&user.ID, &user.Email, &user.Name, &googleIDPtr, &githubIDPtr, &user.Role, &user.CreatedAt, &user.UpdatedAt,
 	)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
 	if err != nil {
 		return nil, fmt.Errorf("getting user: %w", err)
+	}
+
+	if googleIDPtr.Valid {
+		user.GoogleID = &googleIDPtr.String
+	}
+	if githubIDPtr.Valid {
+		user.GitHubID = &githubIDPtr.String
+	}
+
+	return &user, nil
+}
+
+// GetUserByGitHubID retrieves a user by their GitHub ID
+func (db *DB) GetUserByGitHubID(githubID string) (*models.User, error) {
+	var user models.User
+
+	query := `SELECT id, email, name, google_id, github_id, role, created_at, updated_at FROM users WHERE github_id = $1`
+	var googleIDPtr, githubIDPtr sql.NullString
+	err := db.QueryRow(query, githubID).Scan(
+		&user.ID, &user.Email, &user.Name, &googleIDPtr, &githubIDPtr, &user.Role, &user.CreatedAt, &user.UpdatedAt,
+	)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("getting user: %w", err)
+	}
+
+	if googleIDPtr.Valid {
+		user.GoogleID = &googleIDPtr.String
+	}
+	if githubIDPtr.Valid {
+		user.GitHubID = &githubIDPtr.String
 	}
 
 	return &user, nil
@@ -242,17 +322,25 @@ func (db *DB) CreateLocalUser(email, name, role string) (*models.User, error) {
 			name = EXCLUDED.name,
 			role = EXCLUDED.role,
 			updated_at = CURRENT_TIMESTAMP
-		RETURNING id, email, name, google_id, role, created_at, updated_at
+		RETURNING id, email, name, google_id, github_id, role, created_at, updated_at
 	`
 
 	// Use email as google_id for local users with a prefix
 	localGoogleID := "local_" + email
 
+	var googleIDPtr, githubIDPtr sql.NullString
 	err := db.QueryRow(query, email, name, localGoogleID, role).Scan(
-		&user.ID, &user.Email, &user.Name, &user.GoogleID, &user.Role, &user.CreatedAt, &user.UpdatedAt,
+		&user.ID, &user.Email, &user.Name, &googleIDPtr, &githubIDPtr, &user.Role, &user.CreatedAt, &user.UpdatedAt,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("creating local user: %w", err)
+	}
+
+	if googleIDPtr.Valid {
+		user.GoogleID = &googleIDPtr.String
+	}
+	if githubIDPtr.Valid {
+		user.GitHubID = &githubIDPtr.String
 	}
 
 	return &user, nil

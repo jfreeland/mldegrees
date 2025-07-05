@@ -1,10 +1,12 @@
 "use client";
 
-import { useSession, signIn, signOut } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function Titlebar() {
   const { data: session, status } = useSession();
+  const router = useRouter();
 
   return (
     <header className="w-full bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
@@ -48,30 +50,12 @@ export default function Titlebar() {
                 </button>
               </div>
             ) : (
-              <div className="flex items-center space-x-2">
-                {process.env.NODE_ENV === 'development' && (
-                  <>
-                    <button
-                      onClick={() => signIn("local-user")}
-                      className="bg-green-600 text-white px-3 py-2 rounded-md hover:bg-green-700 transition-colors text-sm"
-                    >
-                      Sign In (User)
-                    </button>
-                    <button
-                      onClick={() => signIn("local-admin")}
-                      className="bg-purple-600 text-white px-3 py-2 rounded-md hover:bg-purple-700 transition-colors text-sm"
-                    >
-                      Sign In (Admin)
-                    </button>
-                  </>
-                )}
-                <button
-                  onClick={() => signIn("google")}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
-                >
-                  Sign In with Google
-                </button>
-              </div>
+              <button
+                onClick={() => router.push("/api/auth/signin")}
+                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+              >
+                Sign In
+              </button>
             )}
           </nav>
         </div>
