@@ -14,7 +14,12 @@ export default function Titlebar() {
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
             <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-              Machine Learning Degrees
+              <Link
+                href="/"
+                className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+              >
+                Machine Learning Degrees
+              </Link>
             </h1>
           </div>
           <nav className="flex items-center space-x-8">

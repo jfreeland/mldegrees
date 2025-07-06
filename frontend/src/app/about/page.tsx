@@ -13,9 +13,19 @@ export default function AboutPage() {
           <p className="text-gray-600 dark:text-gray-300 mb-4">
             Machine Learning Degrees helps prospective students find the best
             Machine Learning and AI graduate programs by providing
-            community-driven ratings and insights. Our platform allows users to
-            vote on programs they have experience with, helping others make
-            informed decisions about their education.
+            community-driven ratings. Our platform allows users to vote on
+            programs they have experience with, helping others make informed
+            decisions about their education.
+          </p>
+        </section>
+
+        <section className="mb-8">
+          <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">
+            Ideas
+          </h2>
+          <p className="text-gray-600 dark:text-gray-300 mb-4">
+            Have an idea for how to make this site more useful? Let us know at
+            <a href="mailto:contact@mldegrees.com">contact@mldegrees.com</a>.
           </p>
         </section>
 
@@ -29,8 +39,8 @@ export default function AboutPage() {
           <ul className="list-disc pl-6 text-gray-600 dark:text-gray-300 space-y-2">
             <li>
               <strong>Minimal Data Collection:</strong> We only collect your
-              email address and name from Google when you sign in. We do not
-              store or access any other personal information.
+              email address and name when you sign in. We do not store or access
+              any other personal information.
             </li>
             <li>
               <strong>No Data Sharing:</strong> We do not sell, trade, or share
@@ -70,7 +80,7 @@ export default function AboutPage() {
           <p className="text-gray-600 dark:text-gray-300">
             If you have any questions about our privacy practices or would like
             to request data deletion, please contact us at
-            privacy@mldegrees.com.
+            <a href="mailto:contact@mldegrees.com">contact@mldegrees.com</a>.
           </p>
         </section>
       </div>
