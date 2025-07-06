@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { University } from '@/types/university';
+import { University, ProgramProposal } from '@/types/university';
 import ProgramEditForm from '@/components/ProgramEditForm';
 
 interface Program {
@@ -34,10 +34,11 @@ export default function AdminPage() {
   const router = useRouter();
   const [pendingPrograms, setPendingPrograms] = useState<University[]>([]);
   const [allPrograms, setAllPrograms] = useState<Program[]>([]);
+  const [proposals, setProposals] = useState<ProgramProposal[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const [activeTab, setActiveTab] = useState<'pending' | 'all'>('pending');
+  const [activeTab, setActiveTab] = useState<'pending' | 'proposals' | 'all'>('pending');
   const [editingProgram, setEditingProgram] = useState<Program | null>(null);
 
   const fetchPendingPrograms = useCallback(async () => {
@@ -94,6 +95,32 @@ export default function AdminPage() {
     }
   }, [session]);
 
+  const fetchProposals = useCallback(async () => {
+    if (!session?.user) return;
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/admin/proposals?status=pending`, {
+        headers: {
+          'Authorization': `Bearer ${(session.user as any).googleId}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setProposals(data);
+      } else if (response.status === 403) {
+        setMessage({ type: 'error', text: 'Access denied. Admin privileges required.' });
+        setProposals([]);
+      } else {
+        setMessage({ type: 'error', text: 'Failed to fetch proposals.' });
+        setProposals([]);
+      }
+    } catch (error) {
+      setMessage({ type: 'error', text: 'An error occurred while fetching proposals.' });
+      setProposals([]);
+    }
+  }, [session]);
+
   useEffect(() => {
     if (status === 'loading') return;
 
@@ -105,7 +132,8 @@ export default function AdminPage() {
     // Check if user is admin (this should be handled by the backend, but we can add client-side check too)
     fetchPendingPrograms();
     fetchAllPrograms();
-  }, [session, status, router, fetchPendingPrograms, fetchAllPrograms]);
+    fetchProposals();
+  }, [session, status, router, fetchPendingPrograms, fetchAllPrograms, fetchProposals]);
 
   const handleProgramAction = async (programId: number, action: 'approve' | 'reject') => {
     if (!session?.user) return;
@@ -158,6 +186,46 @@ export default function AdminPage() {
 
   const handleCancelEdit = () => {
     setEditingProgram(null);
+  };
+
+  const handleProposalReview = async (proposalId: number, action: 'approve' | 'reject', adminNotes?: string) => {
+    if (!session?.user) return;
+
+    setActionLoading(proposalId);
+    setMessage(null);
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/admin/proposals/review`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${(session.user as any).googleId}`,
+        },
+        body: JSON.stringify({
+          proposal_id: proposalId,
+          action: action,
+          admin_notes: adminNotes,
+        }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setMessage({ type: 'success', text: result.message });
+        // Remove the proposal from the pending list
+        setProposals(prev => prev.filter(p => p.id !== proposalId));
+        // Refresh all programs to show updated data if approved
+        if (action === 'approve') {
+          fetchAllPrograms();
+        }
+      } else {
+        const error = await response.text();
+        setMessage({ type: 'error', text: error || `Failed to ${action} proposal.` });
+      }
+    } catch (error) {
+      setMessage({ type: 'error', text: `An error occurred while ${action}ing the proposal.` });
+    } finally {
+      setActionLoading(null);
+    }
   };
 
   const getStatusBadge = (visibility: string) => {
@@ -227,6 +295,16 @@ export default function AdminPage() {
                 }`}
               >
                 Pending Programs ({pendingPrograms?.length || 0})
+              </button>
+              <button
+                onClick={() => setActiveTab('proposals')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'proposals'
+                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+                }`}
+              >
+                Program Proposals ({proposals?.length || 0})
               </button>
               <button
                 onClick={() => setActiveTab('all')}
@@ -320,6 +398,122 @@ export default function AdminPage() {
                           {actionLoading === parseInt(program.id) ? 'Processing...' : 'Approve'}
                         </button>
                       </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Program Proposals Tab */}
+        {activeTab === 'proposals' && (
+          <>
+            {!proposals || proposals.length === 0 ? (
+              <div className="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-8 text-center">
+                <div className="text-gray-500 dark:text-gray-400 text-lg">
+                  No pending program proposals to review
+                </div>
+                <p className="text-gray-400 dark:text-gray-500 mt-2">
+                  All program change proposals have been processed.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {proposals.map((proposal) => (
+                  <div key={proposal.id} className="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6">
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="flex-1">
+                        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                          {proposal.program_name} - {proposal.university_name}
+                        </h2>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                          Proposed by {proposal.user_name} ({proposal.user_email}) on{' '}
+                          {new Date(proposal.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+                        Pending Review
+                      </span>
+                    </div>
+
+                    <div className="mb-4">
+                      <h3 className="font-medium text-gray-900 dark:text-white mb-2">Reason for Changes:</h3>
+                      <p className="text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700 p-3 rounded-md">
+                        {proposal.reason}
+                      </p>
+                    </div>
+
+                    <div className="mb-4">
+                      <h3 className="font-medium text-gray-900 dark:text-white mb-2">Proposed Changes:</h3>
+                      <div className="space-y-2">
+                        {proposal.proposed_name && (
+                          <div className="flex">
+                            <span className="font-medium text-gray-600 dark:text-gray-400 w-32">Name:</span>
+                            <span className="text-gray-900 dark:text-white">{proposal.proposed_name}</span>
+                          </div>
+                        )}
+                        {proposal.proposed_description && (
+                          <div className="flex">
+                            <span className="font-medium text-gray-600 dark:text-gray-400 w-32">Description:</span>
+                            <span className="text-gray-900 dark:text-white">{proposal.proposed_description}</span>
+                          </div>
+                        )}
+                        {proposal.proposed_degree_type && (
+                          <div className="flex">
+                            <span className="font-medium text-gray-600 dark:text-gray-400 w-32">Degree Type:</span>
+                            <span className="text-gray-900 dark:text-white">{proposal.proposed_degree_type}</span>
+                          </div>
+                        )}
+                        {proposal.proposed_country && (
+                          <div className="flex">
+                            <span className="font-medium text-gray-600 dark:text-gray-400 w-32">Country:</span>
+                            <span className="text-gray-900 dark:text-white">{proposal.proposed_country}</span>
+                          </div>
+                        )}
+                        {proposal.proposed_city && (
+                          <div className="flex">
+                            <span className="font-medium text-gray-600 dark:text-gray-400 w-32">City:</span>
+                            <span className="text-gray-900 dark:text-white">{proposal.proposed_city}</span>
+                          </div>
+                        )}
+                        {proposal.proposed_state && (
+                          <div className="flex">
+                            <span className="font-medium text-gray-600 dark:text-gray-400 w-32">State:</span>
+                            <span className="text-gray-900 dark:text-white">{proposal.proposed_state}</span>
+                          </div>
+                        )}
+                        {proposal.proposed_url && (
+                          <div className="flex">
+                            <span className="font-medium text-gray-600 dark:text-gray-400 w-32">URL:</span>
+                            <a
+                              href={proposal.proposed_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 dark:text-blue-400 hover:underline"
+                            >
+                              {proposal.proposed_url}
+                            </a>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end gap-3">
+                      <button
+                        onClick={() => handleProposalReview(proposal.id, 'reject')}
+                        disabled={actionLoading === proposal.id}
+                        className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white rounded-lg font-medium transition-colors"
+                      >
+                        {actionLoading === proposal.id ? 'Processing...' : 'Reject'}
+                      </button>
+                      <button
+                        onClick={() => handleProposalReview(proposal.id, 'approve')}
+                        disabled={actionLoading === proposal.id}
+                        className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white rounded-lg font-medium transition-colors"
+                      >
+                        {actionLoading === proposal.id ? 'Processing...' : 'Approve & Apply Changes'}
+                      </button>
                     </div>
                   </div>
                 ))}

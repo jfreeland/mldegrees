@@ -90,3 +90,48 @@ type ProgramUpdateRequest struct {
 	State          *string `json:"state,omitempty"`
 	URL            *string `json:"url,omitempty"`
 }
+
+type ProgramProposal struct {
+	ID                  int        `json:"id"`
+	ProgramID           int        `json:"program_id"`
+	UserID              int        `json:"user_id"`
+	ProposedName        *string    `json:"proposed_name,omitempty"`
+	ProposedDescription *string    `json:"proposed_description,omitempty"`
+	ProposedDegreeType  *string    `json:"proposed_degree_type,omitempty"`
+	ProposedCountry     *string    `json:"proposed_country,omitempty"`
+	ProposedCity        *string    `json:"proposed_city,omitempty"`
+	ProposedState       *string    `json:"proposed_state,omitempty"`
+	ProposedURL         *string    `json:"proposed_url,omitempty"`
+	Reason              string     `json:"reason"`
+	Status              string     `json:"status"`
+	AdminNotes          *string    `json:"admin_notes,omitempty"`
+	ReviewedBy          *int       `json:"reviewed_by,omitempty"`
+	ReviewedAt          *time.Time `json:"reviewed_at,omitempty"`
+	CreatedAt           time.Time  `json:"created_at"`
+	UpdatedAt           time.Time  `json:"updated_at"`
+
+	// Joined fields
+	UserName       string `json:"user_name,omitempty"`
+	UserEmail      string `json:"user_email,omitempty"`
+	ProgramName    string `json:"program_name,omitempty"`
+	UniversityName string `json:"university_name,omitempty"`
+	ReviewerName   string `json:"reviewer_name,omitempty"`
+}
+
+type ProgramProposalRequest struct {
+	ProgramID           int     `json:"program_id"`
+	ProposedName        *string `json:"proposed_name,omitempty"`
+	ProposedDescription *string `json:"proposed_description,omitempty"`
+	ProposedDegreeType  *string `json:"proposed_degree_type,omitempty"`
+	ProposedCountry     *string `json:"proposed_country,omitempty"`
+	ProposedCity        *string `json:"proposed_city,omitempty"`
+	ProposedState       *string `json:"proposed_state,omitempty"`
+	ProposedURL         *string `json:"proposed_url,omitempty"`
+	Reason              string  `json:"reason"`
+}
+
+type ProgramProposalReviewRequest struct {
+	ProposalID int     `json:"proposal_id"`
+	Action     string  `json:"action"` // "approve" or "reject"
+	AdminNotes *string `json:"admin_notes,omitempty"`
+}

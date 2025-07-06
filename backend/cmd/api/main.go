@@ -59,12 +59,30 @@ func main() {
 	// Propose program endpoint (requires authentication)
 	appMux.HandleFunc("/api/programs/propose", handlers.EnableCORS(auth.RequireAuth(handlers.HandleProposeProgram(database))))
 
+	// Program proposal endpoints
+	appMux.HandleFunc("/api/programs/proposals", handlers.EnableCORS(auth.RequireAuth(handlers.HandleProgramProposal(database))))
+	appMux.HandleFunc("/api/programs/proposals/user", handlers.EnableCORS(auth.RequireAuth(handlers.HandleGetUserProposals(database))))
+	appMux.HandleFunc("/api/programs/proposals/", handlers.EnableCORS(auth.RequireAuth(func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodDelete:
+			handlers.HandleDeleteUserProposal(database)(w, r)
+		case http.MethodPut:
+			handlers.HandleUpdateUserProposal(database)(w, r)
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	})))
+
 	// Admin endpoints (require admin role)
 	appMux.HandleFunc("/api/admin/programs", handlers.EnableCORS(auth.RequireAdmin(handlers.HandleAdminPrograms(database))))
 	appMux.HandleFunc("/api/admin/programs/action", handlers.EnableCORS(auth.RequireAdmin(handlers.HandleAdminProgramAction(database))))
 	appMux.HandleFunc("/api/admin/programs/all", handlers.EnableCORS(auth.RequireAdmin(handlers.HandleAdminAllPrograms(database))))
 	appMux.HandleFunc("/api/admin/programs/", handlers.EnableCORS(auth.RequireAdmin(handlers.HandleAdminGetProgram(database))))
 	appMux.HandleFunc("/api/admin/programs/update", handlers.EnableCORS(auth.RequireAdmin(handlers.HandleAdminUpdateProgram(database))))
+
+	// Admin program proposal endpoints
+	appMux.HandleFunc("/api/admin/proposals", handlers.EnableCORS(auth.RequireAdmin(handlers.HandleGetProgramProposals(database))))
+	appMux.HandleFunc("/api/admin/proposals/review", handlers.EnableCORS(auth.RequireAdmin(handlers.HandleReviewProgramProposal(database))))
 
 	// Create the main router
 	mainMux := http.NewServeMux()

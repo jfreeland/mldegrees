@@ -6,11 +6,13 @@ import { University } from "@/types/university";
 interface UniversityCardProps {
   university: University;
   onVote: (universityId: string, vote: 1 | -1) => void;
+  onProposeChanges?: (university: University) => void;
 }
 
 export default function UniversityCard({
   university,
   onVote,
+  onProposeChanges,
 }: UniversityCardProps) {
   const [isVoting, setIsVoting] = useState(false);
 
@@ -122,9 +124,33 @@ export default function UniversityCard({
             {university.city}, {university.state ? `${university.state}, ` : ''}{university.country}
           </span>
         </div>
-        <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+        <p className="text-gray-600 dark:text-gray-400 leading-relaxed mb-4">
           {university.description}
         </p>
+
+        {onProposeChanges && (
+          <div className="flex justify-end">
+            <button
+              onClick={() => onProposeChanges(university)}
+              className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors"
+            >
+              <svg
+                className="w-4 h-4 mr-1"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                />
+              </svg>
+              Propose Changes
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

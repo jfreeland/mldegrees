@@ -255,9 +255,17 @@ func HandleAdminProgramAction(database *db.DB) http.HandlerFunc {
 			http.Error(w, "Failed to update program status", http.StatusInternalServerError)
 			return
 		}
+		// Convert action to proper past tense for message
+		var actionPastTense string
+		if req.Action == "approve" {
+			actionPastTense = "approved"
+		} else if req.Action == "reject" {
+			actionPastTense = "rejected"
+		}
+
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]interface{}{
-			"message": fmt.Sprintf("Program %s successfully", req.Action+"d"),
+			"message": fmt.Sprintf("Program %s successfully", actionPastTense),
 			"status":  visibility,
 		})
 	}
@@ -378,6 +386,278 @@ func HandleAdminUpdateProgram(database *db.DB) http.HandlerFunc {
 		json.NewEncoder(w).Encode(map[string]interface{}{
 			"program": program,
 			"message": "Program updated successfully",
+		})
+	}
+}
+
+// HandleProgramProposal handles creating a new program change proposal
+func HandleProgramProposal(database *db.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		user := auth.GetUserFromContext(r.Context())
+		if user == nil {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		var req models.ProgramProposalRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, "Invalid request body", http.StatusBadRequest)
+			return
+		}
+
+		// Validate required fields
+		if req.ProgramID == 0 || req.Reason == "" {
+			http.Error(w, "Program ID and reason are required", http.StatusBadRequest)
+			return
+		}
+
+		// At least one proposed change must be provided
+		if req.ProposedName == nil && req.ProposedDescription == nil &&
+			req.ProposedDegreeType == nil && req.ProposedCountry == nil &&
+			req.ProposedCity == nil && req.ProposedState == nil && req.ProposedURL == nil {
+			http.Error(w, "At least one proposed change must be provided", http.StatusBadRequest)
+			return
+		}
+
+		// Create the program proposal
+		proposal, err := database.CreateProgramProposal(user.ID, &req)
+		if err != nil {
+			log.Printf("Error creating program proposal for user %d, program %d: %v", user.ID, req.ProgramID, err)
+			http.Error(w, "Failed to create program proposal", http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"proposal": proposal,
+			"message":  "Program change proposal submitted successfully. It will be reviewed by an administrator.",
+		})
+	}
+}
+
+// HandleGetProgramProposals returns program proposals for admin review
+func HandleGetProgramProposals(database *db.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		user := auth.GetUserFromContext(r.Context())
+		if user == nil || user.Role != "admin" {
+			http.Error(w, "Forbidden: Admin access required", http.StatusForbidden)
+			return
+		}
+
+		// Get status filter from query params
+		status := r.URL.Query().Get("status")
+		if status == "" {
+			status = "pending" // Default to pending proposals
+		}
+
+		proposals, err := database.GetProgramProposals(status)
+		if err != nil {
+			log.Printf("Error getting program proposals with status %s: %v", status, err)
+			http.Error(w, "Failed to get program proposals", http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(proposals)
+	}
+}
+
+// HandleReviewProgramProposal handles approving or rejecting program proposals
+func HandleReviewProgramProposal(database *db.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		user := auth.GetUserFromContext(r.Context())
+		if user == nil || user.Role != "admin" {
+			http.Error(w, "Forbidden: Admin access required", http.StatusForbidden)
+			return
+		}
+
+		var req models.ProgramProposalReviewRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			log.Printf("Error decoding request body: %v", err)
+			http.Error(w, "Invalid request body", http.StatusBadRequest)
+			return
+		}
+
+		log.Printf("Received proposal review request: ProposalID=%d, Action=%s", req.ProposalID, req.Action)
+
+		// Validate required fields
+		if req.ProposalID == 0 {
+			log.Printf("ProposalID is 0, rejecting request")
+			http.Error(w, "Proposal ID is required", http.StatusBadRequest)
+			return
+		}
+
+		// Validate action
+		if req.Action != "approve" && req.Action != "reject" {
+			http.Error(w, "Invalid action. Must be 'approve' or 'reject'", http.StatusBadRequest)
+			return
+		}
+
+		// Review the proposal
+		err := database.ReviewProgramProposal(req.ProposalID, user.ID, req.Action, req.AdminNotes)
+		if err != nil {
+			log.Printf("Error reviewing program proposal %d by admin %d: %v", req.ProposalID, user.ID, err)
+			http.Error(w, "Failed to review program proposal", http.StatusInternalServerError)
+			return
+		}
+
+		// Convert action to proper status for response
+		var status string
+		if req.Action == "approve" {
+			status = "approved"
+		} else if req.Action == "reject" {
+			status = "rejected"
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"message": fmt.Sprintf("Program proposal %s successfully", status),
+			"status":  status,
+		})
+	}
+}
+
+// HandleGetUserProposals returns proposals created by the authenticated user
+func HandleGetUserProposals(database *db.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		user := auth.GetUserFromContext(r.Context())
+		if user == nil {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		proposals, err := database.GetUserProgramProposals(user.ID)
+		if err != nil {
+			log.Printf("Error getting program proposals for user %d: %v", user.ID, err)
+			http.Error(w, "Failed to get your program proposals", http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(proposals)
+	}
+}
+
+// HandleDeleteUserProposal handles deleting a user's own proposal
+func HandleDeleteUserProposal(database *db.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodDelete {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		user := auth.GetUserFromContext(r.Context())
+		if user == nil {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		// Get proposal ID from URL path
+		proposalIDStr := r.URL.Path[len("/api/programs/proposals/"):]
+		if proposalIDStr == "" {
+			http.Error(w, "Proposal ID required", http.StatusBadRequest)
+			return
+		}
+
+		proposalID := 0
+		if _, err := fmt.Sscanf(proposalIDStr, "%d", &proposalID); err != nil {
+			http.Error(w, "Invalid proposal ID", http.StatusBadRequest)
+			return
+		}
+
+		err := database.DeleteUserProgramProposal(proposalID, user.ID)
+		if err != nil {
+			log.Printf("Error deleting program proposal %d for user %d: %v", proposalID, user.ID, err)
+			http.Error(w, "Failed to delete proposal", http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{
+			"message": "Proposal deleted successfully",
+		})
+	}
+}
+
+// HandleUpdateUserProposal handles updating a user's own proposal
+func HandleUpdateUserProposal(database *db.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPut {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		user := auth.GetUserFromContext(r.Context())
+		if user == nil {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		// Get proposal ID from URL path
+		proposalIDStr := r.URL.Path[len("/api/programs/proposals/"):]
+		if proposalIDStr == "" {
+			http.Error(w, "Proposal ID required", http.StatusBadRequest)
+			return
+		}
+
+		proposalID := 0
+		if _, err := fmt.Sscanf(proposalIDStr, "%d", &proposalID); err != nil {
+			http.Error(w, "Invalid proposal ID", http.StatusBadRequest)
+			return
+		}
+
+		var req models.ProgramProposalRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, "Invalid request body", http.StatusBadRequest)
+			return
+		}
+
+		// Validate required fields
+		if req.Reason == "" {
+			http.Error(w, "Reason is required", http.StatusBadRequest)
+			return
+		}
+
+		// At least one proposed change must be provided
+		if req.ProposedName == nil && req.ProposedDescription == nil &&
+			req.ProposedDegreeType == nil && req.ProposedCountry == nil &&
+			req.ProposedCity == nil && req.ProposedState == nil && req.ProposedURL == nil {
+			http.Error(w, "At least one proposed change must be provided", http.StatusBadRequest)
+			return
+		}
+
+		// Update the program proposal
+		proposal, err := database.UpdateUserProgramProposal(proposalID, user.ID, &req)
+		if err != nil {
+			log.Printf("Error updating program proposal %d for user %d: %v", proposalID, user.ID, err)
+			http.Error(w, "Failed to update program proposal", http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"proposal": proposal,
+			"message":  "Program proposal updated successfully",
 		})
 	}
 }

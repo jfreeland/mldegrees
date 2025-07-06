@@ -51,4 +51,6 @@ make dev-backend
 The API will be available at
 [http://localhost:8080/api](http://localhost:8080/api).
 
-# Test change
+## TODO
+
+- Admins should be able to delete and edit programs directly.

@@ -3,6 +3,12 @@
 
 import { register, Counter, Histogram, Gauge, collectDefaultMetrics } from 'prom-client';
 
+// Set default labels for all metrics
+register.setDefaultLabels({
+  service: 'mldegrees-frontend',
+  version: process.env.npm_package_version || 'unknown'
+});
+
 // Initialize default metrics collection
 collectDefaultMetrics();
 
@@ -17,7 +23,7 @@ const httpRequestDuration = new Histogram({
   name: 'nextjs_http_request_duration_seconds',
   help: 'Duration of HTTP requests in seconds',
   labelNames: ['method', 'route', 'status_code'],
-  buckets: [0.1, 0.3, 0.5, 0.7, 1, 3, 5, 7, 10],
+  buckets: [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10],
 });
 
 const httpRequestsInFlight = new Gauge({
@@ -41,7 +47,7 @@ const apiCallDuration = new Histogram({
   name: 'nextjs_api_call_duration_seconds',
   help: 'Duration of API calls in seconds',
   labelNames: ['endpoint', 'method', 'status'],
-  buckets: [0.1, 0.3, 0.5, 0.7, 1, 3, 5, 7, 10],
+  buckets: [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10],
 });
 
 export const serverMetrics = {
