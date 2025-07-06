@@ -187,7 +187,7 @@ export default function Home() {
       {!session && (
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
           <p className="text-blue-800 dark:text-blue-200">
-            Sign in with Google or GitHub to vote on programs and help others find the best ML degrees!
+            Sign in with Google or GitHub to vote on programs, recommend programs, and help others find the best machine learning degrees!
           </p>
         </div>
       )}
