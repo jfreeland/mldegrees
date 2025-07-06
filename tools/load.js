@@ -17,7 +17,7 @@ export const options = {
   },
 };
 
-export default async function () {
+export default async function() {
   const context = await browser.newContext();
   const page = await context.newPage();
 
@@ -30,7 +30,7 @@ export default async function () {
 
     const content = await page.content();
     check(page, {
-      "page title is correct": page.title() == "ML Degrees",
+      "page title is correct": page.title() == "Machine Learning Degrees",
       "page includes MIT in the list": content.includes("MIT"),
     });
   } finally {

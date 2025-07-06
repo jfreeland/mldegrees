@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ML Degrees",
-  description: "Machine Learning Degrees Application",
+  title: "Machine Learning Degrees",
+  description: "Machine Learning Degrees",
 };
 
 export default function RootLayout({
