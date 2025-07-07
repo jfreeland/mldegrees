@@ -16,6 +16,7 @@ interface Program {
   city: string;
   state?: string;
   url?: string;
+  cost: string;
   status: string;
   visibility: string;
   created_at: string;
@@ -496,6 +497,18 @@ export default function AdminPage() {
                             </a>
                           </div>
                         )}
+                        {proposal.proposed_cost && (
+                          <div className="flex">
+                            <span className="font-medium text-gray-600 dark:text-gray-400 w-32">Cost:</span>
+                            <span className="text-gray-900 dark:text-white">
+                              {proposal.proposed_cost === 'Free' ? '🆓 Free' :
+                               proposal.proposed_cost === '$' ? '💰 $' :
+                               proposal.proposed_cost === '$$' ? '💰💰 $$' :
+                               proposal.proposed_cost === '$$$' ? '💰💰💰 $$$' :
+                               proposal.proposed_cost}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -547,6 +560,13 @@ export default function AdminPage() {
                       <div className="flex gap-2 ml-4">
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
                           {program.degree_type}
+                        </span>
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                          {program.cost === 'Free' ? '🆓 Free' :
+                           program.cost === '$' ? '💰 $' :
+                           program.cost === '$$' ? '💰💰 $$' :
+                           program.cost === '$$$' ? '💰💰💰 $$$' :
+                           program.cost}
                         </span>
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(program.visibility)}`}>
                           {program.visibility.charAt(0).toUpperCase() + program.visibility.slice(1)}

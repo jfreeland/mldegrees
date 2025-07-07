@@ -20,6 +20,7 @@ export default function ProgramProposalForm({ program, onSubmit, onCancel }: Pro
     proposed_city: '',
     proposed_state: '',
     proposed_url: '',
+    proposed_cost: '',
     reason: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -64,6 +65,7 @@ export default function ProgramProposalForm({ program, onSubmit, onCancel }: Pro
       if (formData.proposed_city.trim()) proposal.proposed_city = formData.proposed_city.trim();
       if (formData.proposed_state.trim()) proposal.proposed_state = formData.proposed_state.trim();
       if (formData.proposed_url.trim()) proposal.proposed_url = formData.proposed_url.trim();
+      if (formData.proposed_cost.trim()) proposal.proposed_cost = formData.proposed_cost.trim();
 
       onSubmit(proposal);
     } catch (error) {
@@ -113,6 +115,7 @@ export default function ProgramProposalForm({ program, onSubmit, onCancel }: Pro
                 <div><span className="font-medium text-white">Country:</span> {program.country}</div>
                 <div><span className="font-medium text-white">City:</span> {program.city}</div>
                 {program.state && <div><span className="font-medium text-white">State:</span> {program.state}</div>}
+                <div><span className="font-medium text-white">Cost:</span> {program.cost}</div>
                 {program.url && <div><span className="font-medium text-white">URL:</span> <a href={program.url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">{program.url}</a></div>}
               </div>
               <div className="mt-2">
@@ -171,6 +174,25 @@ export default function ProgramProposalForm({ program, onSubmit, onCancel }: Pro
                   <option value="masters">Master&apos;s</option>
                   <option value="phd">PhD</option>
                   <option value="certificate">Certificate</option>
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="proposed_cost" className="block text-sm font-medium text-gray-200 mb-1">
+                  Cost
+                </label>
+                <select
+                  id="proposed_cost"
+                  name="proposed_cost"
+                  value={formData.proposed_cost}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-700 text-white"
+                >
+                  <option value="">Keep current: {program.cost}</option>
+                  <option value="Free">🆓 Free</option>
+                  <option value="$">💰 $</option>
+                  <option value="$$">💰💰 $$</option>
+                  <option value="$$$">💰💰💰 $$$</option>
                 </select>
               </div>
 

@@ -20,6 +20,7 @@ export default function ProposePage() {
     city: '',
     state: '',
     url: '',
+    cost: 'Free',
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -71,6 +72,7 @@ export default function ProposePage() {
           city: '',
           state: '',
           url: '',
+          cost: 'Free',
         });
       } else {
         const error = await response.text();
@@ -184,7 +186,7 @@ export default function ProposePage() {
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
                 <label htmlFor="degree_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Degree Type
@@ -199,6 +201,24 @@ export default function ProposePage() {
                   <option value="bachelors">Bachelor&apos;s</option>
                   <option value="masters">Master&apos;s</option>
                   <option value="certificate">Certificate</option>
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="cost" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Cost
+                </label>
+                <select
+                  id="cost"
+                  name="cost"
+                  value={formData.cost}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                >
+                  <option value="Free">🆓 Free</option>
+                  <option value="$">💰 $</option>
+                  <option value="$$">💰💰 $$</option>
+                  <option value="$$$">💰💰💰 $$$</option>
                 </select>
               </div>
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	"githib.com/jfreeland/mldegrees/backend/api/internal/auth"
 	"githib.com/jfreeland/mldegrees/backend/api/internal/db"
@@ -88,6 +89,62 @@ func HandleVote(database *db.DB) http.HandlerFunc {
 				http.Error(w, "Failed to vote", http.StatusInternalServerError)
 				return
 			}
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{"status": "success"})
+	}
+}
+
+// HandleProgramRate handles rating programs with program ID in URL path
+func HandleProgramRate(database *db.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		user := auth.GetUserFromContext(r.Context())
+		if user == nil {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		// Extract program ID from URL path: /api/programs/{id}/rate
+		programIDStr := r.URL.Path[len("/api/programs/"):]
+		if idx := strings.Index(programIDStr, "/"); idx != -1 {
+			programIDStr = programIDStr[:idx]
+		}
+		if programIDStr == "" {
+			http.Error(w, "Program ID required", http.StatusBadRequest)
+			return
+		}
+
+		programID := 0
+		if _, err := fmt.Sscanf(programIDStr, "%d", &programID); err != nil {
+			http.Error(w, "Invalid program ID", http.StatusBadRequest)
+			return
+		}
+
+		var req struct {
+			Rating int `json:"rating"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, "Invalid request body", http.StatusBadRequest)
+			return
+		}
+
+		// Validate rating value
+		if req.Rating < 1 || req.Rating > 5 {
+			http.Error(w, "Invalid rating value. Must be between 1 and 5", http.StatusBadRequest)
+			return
+		}
+
+		// Create or update rating
+		if err := database.Rate(user.ID, programID, req.Rating); err != nil {
+			log.Printf("Error rating for user %d, program %d, rating %d: %v", user.ID, programID, req.Rating, err)
+			http.Error(w, "Failed to rate", http.StatusInternalServerError)
+			return
 		}
 
 		w.Header().Set("Content-Type", "application/json")

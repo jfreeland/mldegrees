@@ -8,15 +8,22 @@ export interface University {
   city: string;
   state?: string;
   url?: string;
+  cost: 'Free' | '$' | '$$' | '$$$';
   status: string;
   visibility: string;
-  rating: number;
-  userVote?: 1 | -1 | null;
+  average_rating: number;
+  user_rating?: number;
+  userVote?: 1 | -1 | null; // Keep for backward compatibility
 }
 
 export interface VoteRequest {
   universityId: string;
   vote: 1 | -1;
+}
+
+export interface RatingRequest {
+  programId: string;
+  rating: 1 | 2 | 3 | 4 | 5;
 }
 
 export interface UniversitiesResponse {
@@ -33,6 +40,7 @@ export interface ProposeRequest {
   city: string;
   state?: string;
   url?: string;
+  cost: 'Free' | '$' | '$$' | '$$$';
 }
 
 export interface ProposeResponse {
@@ -51,6 +59,7 @@ export interface ProgramProposal {
   proposed_city?: string;
   proposed_state?: string;
   proposed_url?: string;
+  proposed_cost?: string;
   reason: string;
   status: 'pending' | 'approved' | 'rejected';
   admin_notes?: string;
@@ -74,6 +83,7 @@ export interface ProgramProposalRequest {
   proposed_city?: string;
   proposed_state?: string;
   proposed_url?: string;
+  proposed_cost?: string;
   reason: string;
 }
 

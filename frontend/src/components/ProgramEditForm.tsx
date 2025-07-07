@@ -13,6 +13,7 @@ interface Program {
   city: string;
   state?: string;
   url?: string;
+  cost: string;
   status: string;
   visibility: string;
   created_at: string;
@@ -38,6 +39,7 @@ export default function ProgramEditForm({ program, onSave, onCancel }: ProgramEd
     city: program.city,
     state: program.state || '',
     url: program.url || '',
+    cost: program.cost || 'Free',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -66,6 +68,7 @@ export default function ProgramEditForm({ program, onSave, onCancel }: ProgramEd
           city: formData.city,
           state: formData.state || null,
           url: formData.url || null,
+          cost: formData.cost,
         }),
       });
 
@@ -182,6 +185,27 @@ export default function ProgramEditForm({ program, onSave, onCancel }: ProgramEd
               </div>
 
               <div>
+                <label htmlFor="cost" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Cost *
+                </label>
+                <select
+                  id="cost"
+                  name="cost"
+                  value={formData.cost}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                >
+                  <option value="Free">Free</option>
+                  <option value="$">$ (Under $10k)</option>
+                  <option value="$$">$$ ($10k-$30k)</option>
+                  <option value="$$$">$$$ (Over $30k)</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
                 <label htmlFor="country" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Country *
                 </label>
@@ -195,9 +219,7 @@ export default function ProgramEditForm({ program, onSave, onCancel }: ProgramEd
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
               </div>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="city" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   City *

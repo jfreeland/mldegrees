@@ -5,16 +5,19 @@ import { University } from "@/types/university";
 
 interface UniversityCardProps {
   university: University;
-  onVote: (universityId: string, vote: 1 | -1) => void;
+  onVote: (universityId: string, vote: 1 | -1) => void; // Keep for backward compatibility
+  onRate?: (universityId: string, rating: number) => void;
   onProposeChanges?: (university: University) => void;
 }
 
 export default function UniversityCard({
   university,
   onVote,
+  onRate,
   onProposeChanges,
 }: UniversityCardProps) {
   const [isVoting, setIsVoting] = useState(false);
+  const [isRating, setIsRating] = useState(false);
 
   const handleVote = async (vote: 1 | -1) => {
     if (isVoting) return;
@@ -26,62 +29,72 @@ export default function UniversityCard({
     }
   };
 
+  const handleRate = async (rating: number) => {
+    if (isRating || !onRate) return;
+    setIsRating(true);
+    try {
+      onRate(university.id, rating);
+    } finally {
+      setIsRating(false);
+    }
+  };
+
+  const getCostDisplay = (cost: string) => {
+    switch (cost) {
+      case 'Free': return '🆓 Free';
+      case '$': return '💰 $';
+      case '$$': return '💰💰 $$';
+      case '$$$': return '💰💰💰 $$$';
+      default: return cost;
+    }
+  };
+
+  const renderStars = () => {
+    const stars = [];
+    for (let i = 1; i <= 5; i++) {
+      stars.push(
+        <button
+          key={i}
+          onClick={() => handleRate(i)}
+          disabled={isRating}
+          className={`text-2xl transition-colors disabled:cursor-not-allowed ${
+            university.user_rating && i <= university.user_rating
+              ? 'text-yellow-400'
+              : 'text-gray-300 hover:text-yellow-400'
+          }`}
+        >
+          ★
+        </button>
+      );
+    }
+    return stars;
+  };
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 flex gap-4">
-      <div className="flex flex-col items-center justify-start space-y-2">
-        <button
-          onClick={() => handleVote(1)}
-          disabled={isVoting}
-          className={`p-2 rounded-md transition-colors ${
-            university.userVote === 1
-              ? "bg-green-500 text-white"
-              : "bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600"
-          } disabled:opacity-50 disabled:cursor-not-allowed`}
-          aria-label="Upvote"
-        >
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M5 15l7-7 7 7"
-            />
-          </svg>
-        </button>
+      <div className="flex flex-col items-center justify-start space-y-3">
+        <div className="text-center">
+          <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+            Value Rating
+          </div>
+          <div className="text-lg font-semibold text-gray-900 dark:text-white">
+            {university.average_rating ? university.average_rating.toFixed(1) : 'N/A'}
+          </div>
+          <div className="text-xs text-gray-400">
+            out of 5
+          </div>
+        </div>
 
-        <span className="text-lg font-semibold text-gray-900 dark:text-white">
-          {university.rating}
-        </span>
-
-        <button
-          onClick={() => handleVote(-1)}
-          disabled={isVoting}
-          className={`p-2 rounded-md transition-colors ${
-            university.userVote === -1
-              ? "bg-red-500 text-white"
-              : "bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600"
-          } disabled:opacity-50 disabled:cursor-not-allowed`}
-          aria-label="Downvote"
-        >
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M19 9l-7 7-7-7"
-            />
-          </svg>
-        </button>
+        {onRate && (
+          <div className="flex flex-col items-center space-y-1">
+            <div className="text-xs text-gray-500 dark:text-gray-400">
+              Rate this program:
+            </div>
+            <div className="flex space-x-1">
+              {renderStars()}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="flex-1">
@@ -122,6 +135,9 @@ export default function UniversityCard({
           </span>
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
             {university.city}, {university.state ? `${university.state}, ` : ''}{university.country}
+          </span>
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+            {getCostDisplay(university.cost)}
           </span>
         </div>
         <p className="text-gray-600 dark:text-gray-400 leading-relaxed mb-4">

@@ -31,13 +31,15 @@ type Program struct {
 	City           string    `json:"city"`
 	State          *string   `json:"state,omitempty"`
 	URL            *string   `json:"url,omitempty"`
+	Cost           string    `json:"cost"`
 	Status         string    `json:"status"`
 	Visibility     string    `json:"visibility"`
 	CreatedAt      time.Time `json:"created_at"`
 	UpdatedAt      time.Time `json:"updated_at"`
 	UniversityName string    `json:"university_name,omitempty"`
-	Rating         int       `json:"rating,omitempty"`
-	UserVote       *int      `json:"user_vote,omitempty"`
+	AverageRating  float64   `json:"average_rating,omitempty"`
+	UserRating     *int      `json:"user_rating,omitempty"`
+	UserVote       *int      `json:"user_vote,omitempty"` // Keep for backward compatibility
 }
 
 type Vote struct {
@@ -49,9 +51,23 @@ type Vote struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
+type Rating struct {
+	ID        int       `json:"id"`
+	UserID    int       `json:"user_id"`
+	ProgramID int       `json:"program_id"`
+	Rating    int       `json:"rating"` // 1-5 scale
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
 type VoteRequest struct {
 	ProgramID int `json:"program_id"`
 	Vote      int `json:"vote"`
+}
+
+type RatingRequest struct {
+	ProgramID int `json:"program_id"`
+	Rating    int `json:"rating"` // 1-5 scale
 }
 
 type ProgramFilters struct {
@@ -72,6 +88,7 @@ type ProposeRequest struct {
 	City           string  `json:"city"`
 	State          *string `json:"state,omitempty"`
 	URL            *string `json:"url,omitempty"`
+	Cost           string  `json:"cost"`
 }
 
 type AdminProgramAction struct {
@@ -89,6 +106,7 @@ type ProgramUpdateRequest struct {
 	City           string  `json:"city"`
 	State          *string `json:"state,omitempty"`
 	URL            *string `json:"url,omitempty"`
+	Cost           string  `json:"cost"`
 }
 
 type ProgramProposal struct {
@@ -102,6 +120,7 @@ type ProgramProposal struct {
 	ProposedCity        *string    `json:"proposed_city,omitempty"`
 	ProposedState       *string    `json:"proposed_state,omitempty"`
 	ProposedURL         *string    `json:"proposed_url,omitempty"`
+	ProposedCost        *string    `json:"proposed_cost,omitempty"`
 	Reason              string     `json:"reason"`
 	Status              string     `json:"status"`
 	AdminNotes          *string    `json:"admin_notes,omitempty"`
@@ -127,6 +146,7 @@ type ProgramProposalRequest struct {
 	ProposedCity        *string `json:"proposed_city,omitempty"`
 	ProposedState       *string `json:"proposed_state,omitempty"`
 	ProposedURL         *string `json:"proposed_url,omitempty"`
+	ProposedCost        *string `json:"proposed_cost,omitempty"`
 	Reason              string  `json:"reason"`
 }
 

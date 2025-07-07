@@ -12,25 +12,25 @@ func (db *DB) CreateProgramProposal(userID int, req *models.ProgramProposalReque
 	query := `
 		INSERT INTO program_proposals (
 			program_id, user_id, proposed_name, proposed_description, proposed_degree_type,
-			proposed_country, proposed_city, proposed_state, proposed_url, reason
+			proposed_country, proposed_city, proposed_state, proposed_url, proposed_cost, reason
 		)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
 		RETURNING id, program_id, user_id, proposed_name, proposed_description, proposed_degree_type,
-		          proposed_country, proposed_city, proposed_state, proposed_url, reason, status,
+		          proposed_country, proposed_city, proposed_state, proposed_url, proposed_cost, reason, status,
 		          admin_notes, reviewed_by, reviewed_at, created_at, updated_at
 	`
 
 	var proposal models.ProgramProposal
-	var proposedName, proposedDescription, proposedDegreeType, proposedCountry, proposedCity, proposedState, proposedURL sql.NullString
+	var proposedName, proposedDescription, proposedDegreeType, proposedCountry, proposedCity, proposedState, proposedURL, proposedCost sql.NullString
 	var adminNotes sql.NullString
 	var reviewedBy sql.NullInt64
 	var reviewedAt sql.NullTime
 
 	err := db.QueryRow(query, req.ProgramID, userID, req.ProposedName, req.ProposedDescription,
 		req.ProposedDegreeType, req.ProposedCountry, req.ProposedCity, req.ProposedState,
-		req.ProposedURL, req.Reason).Scan(
+		req.ProposedURL, req.ProposedCost, req.Reason).Scan(
 		&proposal.ID, &proposal.ProgramID, &proposal.UserID, &proposedName, &proposedDescription,
-		&proposedDegreeType, &proposedCountry, &proposedCity, &proposedState, &proposedURL,
+		&proposedDegreeType, &proposedCountry, &proposedCity, &proposedState, &proposedURL, &proposedCost,
 		&proposal.Reason, &proposal.Status, &adminNotes, &reviewedBy, &reviewedAt,
 		&proposal.CreatedAt, &proposal.UpdatedAt,
 	)
@@ -60,6 +60,9 @@ func (db *DB) CreateProgramProposal(userID int, req *models.ProgramProposalReque
 	if proposedURL.Valid {
 		proposal.ProposedURL = &proposedURL.String
 	}
+	if proposedCost.Valid {
+		proposal.ProposedCost = &proposedCost.String
+	}
 	if adminNotes.Valid {
 		proposal.AdminNotes = &adminNotes.String
 	}
@@ -80,7 +83,7 @@ func (db *DB) GetProgramProposals(status string) ([]models.ProgramProposal, erro
 		SELECT
 			pp.id, pp.program_id, pp.user_id, pp.proposed_name, pp.proposed_description,
 			pp.proposed_degree_type, pp.proposed_country, pp.proposed_city, pp.proposed_state,
-			pp.proposed_url, pp.reason, pp.status, pp.admin_notes, pp.reviewed_by,
+			pp.proposed_url, pp.proposed_cost, pp.reason, pp.status, pp.admin_notes, pp.reviewed_by,
 			pp.reviewed_at, pp.created_at, pp.updated_at,
 			u.name as user_name, u.email as user_email,
 			p.name as program_name, univ.name as university_name,
@@ -103,7 +106,7 @@ func (db *DB) GetProgramProposals(status string) ([]models.ProgramProposal, erro
 	var proposals []models.ProgramProposal
 	for rows.Next() {
 		var proposal models.ProgramProposal
-		var proposedName, proposedDescription, proposedDegreeType, proposedCountry, proposedCity, proposedState, proposedURL sql.NullString
+		var proposedName, proposedDescription, proposedDegreeType, proposedCountry, proposedCity, proposedState, proposedURL, proposedCost sql.NullString
 		var adminNotes sql.NullString
 		var reviewedBy sql.NullInt64
 		var reviewedAt sql.NullTime
@@ -111,7 +114,7 @@ func (db *DB) GetProgramProposals(status string) ([]models.ProgramProposal, erro
 
 		err := rows.Scan(
 			&proposal.ID, &proposal.ProgramID, &proposal.UserID, &proposedName, &proposedDescription,
-			&proposedDegreeType, &proposedCountry, &proposedCity, &proposedState, &proposedURL,
+			&proposedDegreeType, &proposedCountry, &proposedCity, &proposedState, &proposedURL, &proposedCost,
 			&proposal.Reason, &proposal.Status, &adminNotes, &reviewedBy, &reviewedAt,
 			&proposal.CreatedAt, &proposal.UpdatedAt,
 			&proposal.UserName, &proposal.UserEmail, &proposal.ProgramName, &proposal.UniversityName,
@@ -142,6 +145,9 @@ func (db *DB) GetProgramProposals(status string) ([]models.ProgramProposal, erro
 		}
 		if proposedURL.Valid {
 			proposal.ProposedURL = &proposedURL.String
+		}
+		if proposedCost.Valid {
+			proposal.ProposedCost = &proposedCost.String
 		}
 		if adminNotes.Valid {
 			proposal.AdminNotes = &adminNotes.String
@@ -177,18 +183,18 @@ func (db *DB) ReviewProgramProposal(proposalID, reviewerID int, action string, a
 
 	// Get the proposal details
 	var proposal models.ProgramProposal
-	var proposedName, proposedDescription, proposedDegreeType, proposedCountry, proposedCity, proposedState, proposedURL sql.NullString
+	var proposedName, proposedDescription, proposedDegreeType, proposedCountry, proposedCity, proposedState, proposedURL, proposedCost sql.NullString
 
 	query := `
 		SELECT program_id, proposed_name, proposed_description, proposed_degree_type,
-		       proposed_country, proposed_city, proposed_state, proposed_url
+		       proposed_country, proposed_city, proposed_state, proposed_url, proposed_cost
 		FROM program_proposals
 		WHERE id = $1 AND status = 'pending'
 	`
 
 	err = tx.QueryRow(query, proposalID).Scan(
 		&proposal.ProgramID, &proposedName, &proposedDescription, &proposedDegreeType,
-		&proposedCountry, &proposedCity, &proposedState, &proposedURL,
+		&proposedCountry, &proposedCity, &proposedState, &proposedURL, &proposedCost,
 	)
 	if err == sql.ErrNoRows {
 		return fmt.Errorf("proposal not found or already reviewed")
@@ -218,6 +224,9 @@ func (db *DB) ReviewProgramProposal(proposalID, reviewerID int, action string, a
 	}
 	if proposedURL.Valid {
 		proposal.ProposedURL = &proposedURL.String
+	}
+	if proposedCost.Valid {
+		proposal.ProposedCost = &proposedCost.String
 	}
 
 	// If approved, apply the changes to the program
@@ -259,6 +268,11 @@ func (db *DB) ReviewProgramProposal(proposalID, reviewerID int, action string, a
 		if proposal.ProposedURL != nil {
 			updateQuery += fmt.Sprintf(", url = $%d", argIndex)
 			updateArgs = append(updateArgs, *proposal.ProposedURL)
+			argIndex++
+		}
+		if proposal.ProposedCost != nil {
+			updateQuery += fmt.Sprintf(", cost = $%d", argIndex)
+			updateArgs = append(updateArgs, *proposal.ProposedCost)
 			argIndex++
 		}
 
@@ -304,7 +318,7 @@ func (db *DB) GetUserProgramProposals(userID int) ([]models.ProgramProposal, err
 		SELECT
 			pp.id, pp.program_id, pp.user_id, pp.proposed_name, pp.proposed_description,
 			pp.proposed_degree_type, pp.proposed_country, pp.proposed_city, pp.proposed_state,
-			pp.proposed_url, pp.reason, pp.status, pp.admin_notes, pp.reviewed_by,
+			pp.proposed_url, pp.proposed_cost, pp.reason, pp.status, pp.admin_notes, pp.reviewed_by,
 			pp.reviewed_at, pp.created_at, pp.updated_at,
 			p.name as program_name, univ.name as university_name,
 			reviewer.name as reviewer_name
@@ -325,7 +339,7 @@ func (db *DB) GetUserProgramProposals(userID int) ([]models.ProgramProposal, err
 	var proposals []models.ProgramProposal
 	for rows.Next() {
 		var proposal models.ProgramProposal
-		var proposedName, proposedDescription, proposedDegreeType, proposedCountry, proposedCity, proposedState, proposedURL sql.NullString
+		var proposedName, proposedDescription, proposedDegreeType, proposedCountry, proposedCity, proposedState, proposedURL, proposedCost sql.NullString
 		var adminNotes sql.NullString
 		var reviewedBy sql.NullInt64
 		var reviewedAt sql.NullTime
@@ -333,7 +347,7 @@ func (db *DB) GetUserProgramProposals(userID int) ([]models.ProgramProposal, err
 
 		err := rows.Scan(
 			&proposal.ID, &proposal.ProgramID, &proposal.UserID, &proposedName, &proposedDescription,
-			&proposedDegreeType, &proposedCountry, &proposedCity, &proposedState, &proposedURL,
+			&proposedDegreeType, &proposedCountry, &proposedCity, &proposedState, &proposedURL, &proposedCost,
 			&proposal.Reason, &proposal.Status, &adminNotes, &reviewedBy, &reviewedAt,
 			&proposal.CreatedAt, &proposal.UpdatedAt,
 			&proposal.ProgramName, &proposal.UniversityName, &reviewerName,
@@ -363,6 +377,9 @@ func (db *DB) GetUserProgramProposals(userID int) ([]models.ProgramProposal, err
 		}
 		if proposedURL.Valid {
 			proposal.ProposedURL = &proposedURL.String
+		}
+		if proposedCost.Valid {
+			proposal.ProposedCost = &proposedCost.String
 		}
 		if adminNotes.Valid {
 			proposal.AdminNotes = &adminNotes.String
@@ -431,7 +448,7 @@ func (db *DB) UpdateUserProgramProposal(proposalID, userID int, req *models.Prog
 	// Validate that at least one proposed change is provided
 	if req.ProposedName == nil && req.ProposedDescription == nil &&
 		req.ProposedDegreeType == nil && req.ProposedCountry == nil &&
-		req.ProposedCity == nil && req.ProposedState == nil && req.ProposedURL == nil {
+		req.ProposedCity == nil && req.ProposedState == nil && req.ProposedURL == nil && req.ProposedCost == nil {
 		return nil, fmt.Errorf("at least one proposed change must be provided")
 	}
 
@@ -440,24 +457,24 @@ func (db *DB) UpdateUserProgramProposal(proposalID, userID int, req *models.Prog
 		UPDATE program_proposals
 		SET proposed_name = $1, proposed_description = $2, proposed_degree_type = $3,
 		    proposed_country = $4, proposed_city = $5, proposed_state = $6,
-		    proposed_url = $7, reason = $8, updated_at = CURRENT_TIMESTAMP
-		WHERE id = $9 AND user_id = $10
+		    proposed_url = $7, proposed_cost = $8, reason = $9, updated_at = CURRENT_TIMESTAMP
+		WHERE id = $10 AND user_id = $11
 		RETURNING id, program_id, user_id, proposed_name, proposed_description, proposed_degree_type,
-		          proposed_country, proposed_city, proposed_state, proposed_url, reason, status,
+		          proposed_country, proposed_city, proposed_state, proposed_url, proposed_cost, reason, status,
 		          admin_notes, reviewed_by, reviewed_at, created_at, updated_at
 	`
 
 	var proposal models.ProgramProposal
-	var proposedName, proposedDescription, proposedDegreeType, proposedCountry, proposedCity, proposedState, proposedURL sql.NullString
+	var proposedName, proposedDescription, proposedDegreeType, proposedCountry, proposedCity, proposedState, proposedURL, proposedCost sql.NullString
 	var adminNotes sql.NullString
 	var reviewedBy sql.NullInt64
 	var reviewedAt sql.NullTime
 
 	err = db.QueryRow(updateQuery, req.ProposedName, req.ProposedDescription,
 		req.ProposedDegreeType, req.ProposedCountry, req.ProposedCity, req.ProposedState,
-		req.ProposedURL, req.Reason, proposalID, userID).Scan(
+		req.ProposedURL, req.ProposedCost, req.Reason, proposalID, userID).Scan(
 		&proposal.ID, &proposal.ProgramID, &proposal.UserID, &proposedName, &proposedDescription,
-		&proposedDegreeType, &proposedCountry, &proposedCity, &proposedState, &proposedURL,
+		&proposedDegreeType, &proposedCountry, &proposedCity, &proposedState, &proposedURL, &proposedCost,
 		&proposal.Reason, &proposal.Status, &adminNotes, &reviewedBy, &reviewedAt,
 		&proposal.CreatedAt, &proposal.UpdatedAt,
 	)
@@ -486,6 +503,9 @@ func (db *DB) UpdateUserProgramProposal(proposalID, userID int, req *models.Prog
 	}
 	if proposedURL.Valid {
 		proposal.ProposedURL = &proposedURL.String
+	}
+	if proposedCost.Valid {
+		proposal.ProposedCost = &proposedCost.String
 	}
 	if adminNotes.Valid {
 		proposal.AdminNotes = &adminNotes.String

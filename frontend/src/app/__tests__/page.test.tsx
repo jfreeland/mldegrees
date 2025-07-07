@@ -64,15 +64,30 @@ describe('Home Page', () => {
     });
   });
 
-  it('displays correct ratings', async () => {
+  it('displays correct average ratings', async () => {
     await act(async () => {
       renderWithSession(<Home />);
     });
 
     await waitFor(() => {
-      mockUniversities.forEach(university => {
-        expect(screen.getAllByText(university.rating.toString()).length).toBeGreaterThan(0);
-      });
+      // Check that average ratings are displayed
+      expect(screen.getByText('4.2')).toBeInTheDocument(); // Stanford
+      expect(screen.getByText('4.5')).toBeInTheDocument(); // MIT
+      expect(screen.getByText('4.1')).toBeInTheDocument(); // CMU
+      expect(screen.getByText('3.8')).toBeInTheDocument(); // Berkeley
+      expect(screen.getByText('4.0')).toBeInTheDocument(); // Toronto
+    });
+  });
+
+  it('displays cost information', async () => {
+    await act(async () => {
+      renderWithSession(<Home />);
+    });
+
+    await waitFor(() => {
+      // Check that cost badges are displayed
+      expect(screen.getAllByText('💰💰💰 $$$').length).toBeGreaterThan(0); // Stanford, MIT, CMU
+      expect(screen.getAllByText('💰💰 $$').length).toBeGreaterThan(0); // Berkeley, Toronto
     });
   });
 
@@ -101,7 +116,7 @@ describe('Home Page', () => {
         });
     });
 
-    it('handles upvote correctly', async () => {
+    it('displays star rating system for authenticated users', async () => {
         await act(async () => {
           renderWithSession(<Home />);
         });
@@ -110,19 +125,15 @@ describe('Home Page', () => {
         expect(screen.getByText('Stanford University')).toBeInTheDocument();
       });
 
-      const upvoteButtons = screen.getAllByLabelText('Upvote');
-      const firstUpvote = upvoteButtons[0];
+      // Check that rating interface is displayed (there should be multiple instances)
+      expect(screen.getAllByText('Rate this program:').length).toBeGreaterThan(0);
 
-      await act(async () => {
-        fireEvent.click(firstUpvote);
-      });
-
-      await waitFor(() => {
-        expect(screen.getByText('43')).toBeInTheDocument();
-      });
+      // Check that stars are present (should have 5 stars per program)
+      const stars = screen.getAllByText('★');
+      expect(stars.length).toBeGreaterThan(0);
     });
 
-    it('handles downvote correctly', async () => {
+    it('handles star rating interface', async () => {
         await act(async () => {
           renderWithSession(<Home />);
         });
@@ -131,61 +142,24 @@ describe('Home Page', () => {
         expect(screen.getByText('Stanford University')).toBeInTheDocument();
       });
 
-      const downvoteButtons = screen.getAllByLabelText('Downvote');
-      const firstDownvote = downvoteButtons[0];
-
-      await act(async () => {
-        fireEvent.click(firstDownvote);
-      });
-
-      await waitFor(() => {
-        expect(screen.getByText('41')).toBeInTheDocument();
-      });
-    });
-
-    it('toggles vote when clicking same button twice', async () => {
-        await act(async () => {
-          renderWithSession(<Home />);
-        });
-
-      await waitFor(() => {
-        expect(screen.getByText('Stanford University')).toBeInTheDocument();
-      });
-
-      // Find Stanford's card - need to get the parent card container
+      // Find Stanford's card
       const stanfordText = screen.getByText('Stanford University');
       const stanfordCard = stanfordText.closest('.bg-white') as HTMLElement;
-      const upvoteButton = within(stanfordCard).getByLabelText('Upvote');
 
-      // Initial rating should be 42
-      await waitFor(() => {
-        expect(within(stanfordCard).getByText('42')).toBeInTheDocument();
-      });
+      // Check that the rating interface exists
+      expect(within(stanfordCard).getByText('Rate this program:')).toBeInTheDocument();
 
-      // First click - upvote (42 -> 43)
-      await act(async () => {
-        fireEvent.click(upvoteButton);
-      });
+      // Find the stars within Stanford's card
+      const stars = within(stanfordCard).getAllByText('★');
+      expect(stars.length).toBe(5); // Should have 5 stars
 
-      // Wait for the state to update
-      await waitFor(() => {
-        const ratingElement = within(stanfordCard).getByText('43');
-        expect(ratingElement).toBeInTheDocument();
-      });
-
-      // Second click - remove vote (43 -> 42)
-      await act(async () => {
-        fireEvent.click(upvoteButton);
-      });
-
-      // Wait for the state to update back to 42
-      await waitFor(() => {
-        const ratingElement = within(stanfordCard).getByText('42');
-        expect(ratingElement).toBeInTheDocument();
+      // Verify that stars are clickable buttons
+      stars.forEach(star => {
+        expect(star.tagName).toBe('BUTTON');
       });
     });
 
-    it('changes vote when clicking opposite button', async () => {
+    it('shows value rating information', async () => {
         await act(async () => {
           renderWithSession(<Home />);
         });
@@ -194,31 +168,40 @@ describe('Home Page', () => {
         expect(screen.getByText('Stanford University')).toBeInTheDocument();
       });
 
+      // Find Stanford's card
       const stanfordText = screen.getByText('Stanford University');
       const stanfordCard = stanfordText.closest('.bg-white') as HTMLElement;
-      const upvoteButton = within(stanfordCard).getByLabelText('Upvote');
-      const downvoteButton = within(stanfordCard).getByLabelText('Downvote');
 
-      // Initial rating should be 42
+      // Check that value rating information is displayed
+      expect(within(stanfordCard).getByText('Value Rating')).toBeInTheDocument();
+      expect(within(stanfordCard).getByText('4.2')).toBeInTheDocument(); // Stanford's rating
+      expect(within(stanfordCard).getByText('out of 5')).toBeInTheDocument();
+    });
+
+    it('shows different star ratings for different programs', async () => {
+        await act(async () => {
+          renderWithSession(<Home />);
+        });
+
       await waitFor(() => {
-        expect(within(stanfordCard).getByText('42')).toBeInTheDocument();
+        expect(screen.getByText('Stanford University')).toBeInTheDocument();
+        expect(screen.getByText('MIT')).toBeInTheDocument();
       });
 
-      // First upvote (42 -> 43)
-      await act(async () => {
-        fireEvent.click(upvoteButton);
-      });
-      await waitFor(() => {
-        expect(within(stanfordCard).getByText('43')).toBeInTheDocument();
-      });
+      // Find different program cards
+      const stanfordText = screen.getByText('Stanford University');
+      const stanfordCard = stanfordText.closest('.bg-white') as HTMLElement;
 
-      // Then downvote (43 -> 41, because we go from +1 to -1, which is a -2 change)
-      await act(async () => {
-        fireEvent.click(downvoteButton);
-      });
-      await waitFor(() => {
-        expect(within(stanfordCard).getByText('41')).toBeInTheDocument();
-      });
+      const mitText = screen.getByText('MIT');
+      const mitCard = mitText.closest('.bg-white') as HTMLElement;
+
+      // Check that different programs show different ratings
+      expect(within(stanfordCard).getByText('4.2')).toBeInTheDocument();
+      expect(within(mitCard).getByText('4.5')).toBeInTheDocument();
+
+      // Both should have star rating interfaces
+      expect(within(stanfordCard).getAllByText('★').length).toBe(5);
+      expect(within(mitCard).getAllByText('★').length).toBe(5);
     });
   });
 });

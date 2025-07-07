@@ -101,9 +101,11 @@ export default function Home() {
           city: program.city,
           state: program.state,
           url: program.url,
+          cost: program.cost || 'Free',
           status: program.status,
           visibility: program.visibility,
-          rating: program.rating,
+          average_rating: program.average_rating || 0,
+          user_rating: program.user_rating || undefined,
           userVote: program.user_vote || null,
         }),
       );
@@ -152,7 +154,7 @@ export default function Home() {
           return {
             ...uni,
             userVote: newUserVote,
-            rating: (uni.rating || 0) + ratingChange,
+            average_rating: (uni.average_rating || 0) + ratingChange,
           };
         }
         return uni;
@@ -187,6 +189,55 @@ export default function Home() {
       }
     } catch (err) {
       console.error("Vote error:", err);
+      // Revert on error
+      fetchUniversities();
+    }
+  };
+
+  const handleRate = async (universityId: string, rating: number) => {
+    if (!session) {
+      alert("Please sign in to rate programs");
+      return;
+    }
+
+    // Optimistically update the UI
+    setUniversities((prevUniversities) =>
+      prevUniversities.map((uni) => {
+        if (uni.id === universityId) {
+          return {
+            ...uni,
+            user_rating: rating,
+          };
+        }
+        return uni;
+      }),
+    );
+
+    try {
+      const authToken =
+        (session.user as any).googleId || (session.user as any).githubId;
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/programs/${universityId}/rate`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(authToken && authToken !== "undefined" && authToken !== "null"
+              ? { Authorization: `Bearer ${authToken}` }
+              : {}),
+          },
+          body: JSON.stringify({ rating }),
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to submit rating");
+      }
+
+      // Optionally refresh the data to get updated average rating
+      fetchUniversities();
+    } catch (err) {
+      console.error("Rating error:", err);
       // Revert on error
       fetchUniversities();
     }
@@ -485,6 +536,7 @@ export default function Home() {
             key={university.id}
             university={university}
             onVote={handleVote}
+            onRate={session ? handleRate : undefined}
             onProposeChanges={session ? handleProposeChanges : undefined}
           />
         ))}

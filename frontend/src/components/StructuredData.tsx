@@ -39,12 +39,12 @@ export default function StructuredData({ universities }: StructuredDataProps) {
       },
       "educationalCredentialAwarded": university.degreeType,
       "url": university.url,
-      "aggregateRating": university.rating ? {
+      "aggregateRating": university.average_rating ? {
         "@type": "AggregateRating",
-        "ratingValue": university.rating,
+        "ratingValue": university.average_rating,
         "ratingCount": 1,
         "bestRating": 5,
-        "worstRating": -5
+        "worstRating": 1
       } : undefined
     }))
 

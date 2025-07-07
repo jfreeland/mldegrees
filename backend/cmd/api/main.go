@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"path/filepath"
+	"strings"
 
 	"githib.com/jfreeland/mldegrees/backend/api/internal/auth"
 	"githib.com/jfreeland/mldegrees/backend/api/internal/config"
@@ -55,6 +56,19 @@ func main() {
 
 	// Vote endpoint (requires authentication)
 	appMux.HandleFunc("/api/vote", handlers.EnableCORS(auth.RequireAuth(handlers.HandleVote(database))))
+
+	// Rate endpoint (requires authentication) - matches frontend expectation
+	appMux.HandleFunc("/api/programs/", handlers.EnableCORS(auth.RequireAuth(func(w http.ResponseWriter, r *http.Request) {
+		// Check if this is a rating request
+		if r.Method == http.MethodPost && len(r.URL.Path) > len("/api/programs/") {
+			pathParts := strings.Split(r.URL.Path, "/")
+			if len(pathParts) >= 5 && pathParts[4] == "rate" {
+				handlers.HandleProgramRate(database)(w, r)
+				return
+			}
+		}
+		http.Error(w, "Not found", http.StatusNotFound)
+	})))
 
 	// Propose program endpoint (requires authentication)
 	appMux.HandleFunc("/api/programs/propose", handlers.EnableCORS(auth.RequireAuth(handlers.HandleProposeProgram(database))))

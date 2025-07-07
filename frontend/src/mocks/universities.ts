@@ -10,9 +10,10 @@ export const mockUniversities: University[] = [
     country: "United States",
     city: "Stanford",
     state: "CA",
+    cost: "$$$",
     status: "active",
     visibility: "approved",
-    rating: 42,
+    average_rating: 4.2,
     userVote: null
   },
   {
@@ -24,9 +25,10 @@ export const mockUniversities: University[] = [
     country: "United States",
     city: "Cambridge",
     state: "MA",
+    cost: "$$$",
     status: "active",
     visibility: "approved",
-    rating: 38,
+    average_rating: 4.5,
     userVote: 1
   },
   {
@@ -38,9 +40,10 @@ export const mockUniversities: University[] = [
     country: "United States",
     city: "Pittsburgh",
     state: "PA",
+    cost: "$$$",
     status: "active",
     visibility: "approved",
-    rating: 35,
+    average_rating: 4.1,
     userVote: null
   },
   {
@@ -52,9 +55,10 @@ export const mockUniversities: University[] = [
     country: "United States",
     city: "Berkeley",
     state: "CA",
+    cost: "$$",
     status: "active",
     visibility: "approved",
-    rating: 28,
+    average_rating: 3.8,
     userVote: -1
   },
   {
@@ -66,9 +70,10 @@ export const mockUniversities: University[] = [
     country: "Canada",
     city: "Toronto",
     state: "ON",
+    cost: "$$",
     status: "active",
     visibility: "approved",
-    rating: 25,
+    average_rating: 4.0,
     userVote: null
   }
 ];
