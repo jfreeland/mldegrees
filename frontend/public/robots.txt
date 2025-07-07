@@ -1,0 +1,18 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://mldegrees.com/sitemap.xml
+
+# Disallow admin and API routes
+Disallow: /admin
+Disallow: /api/
+Disallow: /proposals
+Disallow: /propose
+
+# Allow specific pages
+Allow: /about
+Allow: /guide
+
+# Crawl delay (optional)
+Crawl-delay: 1

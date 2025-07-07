@@ -1,0 +1,22 @@
+{
+    "background_color": "#ffffff",
+    "categories": [
+        "education",
+        "reference"
+    ],
+    "description": "Discover and compare machine learning degree programs, certificates, and courses worldwide.",
+    "display": "standalone",
+    "icons": [
+        {
+            "sizes": "any",
+            "src": "/favicon.ico",
+            "type": "image/x-icon"
+        }
+    ],
+    "lang": "en",
+    "name": "ML Degrees - Machine Learning Degrees Worldwide",
+    "orientation": "portrait-primary",
+    "short_name": "ML Degrees",
+    "start_url": "/",
+    "theme_color": "#2563eb"
+}

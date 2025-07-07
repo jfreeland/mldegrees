@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import UniversityCard from "@/components/UniversityCard";
 import ProgramProposalForm from "@/components/ProgramProposalForm";
+import StructuredData from "@/components/StructuredData";
 import { University, ProgramProposalRequest } from "@/types/university";
 
 interface Filters {
@@ -256,7 +257,9 @@ export default function Home() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <>
+      <StructuredData universities={universities} />
+      <div className="max-w-4xl mx-auto px-4 py-8">
       {!session && (
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
           <p className="text-blue-800 dark:text-blue-200">
@@ -494,7 +497,8 @@ export default function Home() {
           onCancel={handleCancelProposal}
         />
       )}
-    </div>
+      </div>
+    </>
   );
 }
 // Test comment

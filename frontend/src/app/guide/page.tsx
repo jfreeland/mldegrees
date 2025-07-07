@@ -1,3 +1,23 @@
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: "AI & ML Degree Guide",
+  description: "Complete guide to understanding AI vs ML degrees, degree types (Bachelor's, Master's, PhD), program types, and how to choose the right machine learning program for your career goals.",
+  keywords: ["AI degree guide", "ML degree guide", "machine learning education", "artificial intelligence programs", "computer science degrees", "data science programs"],
+  openGraph: {
+    title: "Complete Guide to AI & ML Degrees - Choose the Right Program",
+    description: "Understand the differences between AI and ML degrees, explore degree types, and learn how to choose the perfect machine learning program for your career.",
+    url: "https://mldegrees.com/guide",
+  },
+  twitter: {
+    title: "Complete Guide to AI & ML Degrees - Choose the Right Program",
+    description: "Understand the differences between AI and ML degrees, explore degree types, and learn how to choose the perfect machine learning program for your career.",
+  },
+  alternates: {
+    canonical: "https://mldegrees.com/guide",
+  },
+}
+
 export default function GuidePage() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">

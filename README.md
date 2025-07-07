@@ -53,4 +53,5 @@ The API will be available at
 
 ## TODO
 
-- Admins should be able to delete and edit programs directly.
+- Move to "Value for Money" ratings, include cost
+- Add things like open university, edx

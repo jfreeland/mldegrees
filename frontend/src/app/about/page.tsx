@@ -1,3 +1,22 @@
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: "About ML Degrees",
+  description: "Learn about ML Degrees platform, our mission to help students find the best machine learning programs, privacy policy, and how our community-driven rating system works.",
+  openGraph: {
+    title: "About ML Degrees - Community-Driven ML Program Reviews",
+    description: "Learn about our mission to help students find the best machine learning programs through community-driven ratings and reviews.",
+    url: "https://mldegrees.com/about",
+  },
+  twitter: {
+    title: "About ML Degrees - Community-Driven ML Program Reviews",
+    description: "Learn about our mission to help students find the best machine learning programs through community-driven ratings and reviews.",
+  },
+  alternates: {
+    canonical: "https://mldegrees.com/about",
+  },
+}
+
 export default function AboutPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-12">
