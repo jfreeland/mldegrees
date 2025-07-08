@@ -30,6 +30,16 @@ interface AdminProgramAction {
   action: 'approve' | 'reject';
 }
 
+interface Filters {
+  degreeType: string;
+  country: string;
+  city: string;
+  state: string;
+  cost: string;
+  sortBy: string;
+  sortOrder: string;
+}
+
 export default function AdminPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -41,6 +51,22 @@ export default function AdminPage() {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [activeTab, setActiveTab] = useState<'pending' | 'proposals' | 'all'>('pending');
   const [editingProgram, setEditingProgram] = useState<Program | null>(null);
+  const [filters, setFilters] = useState<Filters>({
+    degreeType: '',
+    country: '',
+    city: '',
+    state: '',
+    cost: '',
+    sortBy: 'created_at',
+    sortOrder: 'desc',
+  });
+
+  // Extract unique location options from programs data
+  const locationOptions = {
+    countries: [...new Set(allPrograms.map((p) => p.country).filter(Boolean))].sort(),
+    cities: [...new Set(allPrograms.map((p) => p.city).filter(Boolean))].sort(),
+    states: [...new Set(allPrograms.map((p) => p.state).filter(Boolean))].sort(),
+  };
 
   const fetchPendingPrograms = useCallback(async () => {
     if (!session?.user) return;
@@ -74,7 +100,18 @@ export default function AdminPage() {
     if (!session?.user) return;
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/admin/programs/all`, {
+      // Build query parameters for filtering
+      const queryParams = new URLSearchParams();
+      if (filters.degreeType) queryParams.append('degree_type', filters.degreeType);
+      if (filters.country) queryParams.append('country', filters.country);
+      if (filters.city) queryParams.append('city', filters.city);
+      if (filters.state) queryParams.append('state', filters.state);
+      if (filters.cost) queryParams.append('cost', filters.cost);
+      if (filters.sortBy) queryParams.append('sort_by', filters.sortBy);
+      if (filters.sortOrder) queryParams.append('sort_order', filters.sortOrder);
+
+      const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/admin/programs/all${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+      const response = await fetch(url, {
         headers: {
           'Authorization': `Bearer ${(session.user as any).googleId}`,
         },
@@ -94,7 +131,7 @@ export default function AdminPage() {
       setMessage({ type: 'error', text: 'An error occurred while fetching programs.' });
       setAllPrograms([]);
     }
-  }, [session]);
+  }, [session, filters]);
 
   const fetchProposals = useCallback(async () => {
     if (!session?.user) return;
@@ -501,10 +538,10 @@ export default function AdminPage() {
                           <div className="flex">
                             <span className="font-medium text-gray-600 dark:text-gray-400 w-32">Cost:</span>
                             <span className="text-gray-900 dark:text-white">
-                              {proposal.proposed_cost === 'Free' ? '🆓 Free' :
-                               proposal.proposed_cost === '$' ? '💰 $' :
-                               proposal.proposed_cost === '$$' ? '💰💰 $$' :
-                               proposal.proposed_cost === '$$$' ? '💰💰💰 $$$' :
+                              {proposal.proposed_cost === 'Free' ? 'Free' :
+                               proposal.proposed_cost === '$' ? 'Low Cost' :
+                               proposal.proposed_cost === '$$' ? 'Medium Cost' :
+                               proposal.proposed_cost === '$$$' ? 'High Cost' :
                                proposal.proposed_cost}
                             </span>
                           </div>
@@ -538,6 +575,166 @@ export default function AdminPage() {
         {/* All Programs Tab */}
         {activeTab === 'all' && (
           <>
+            {/* Filters for All Programs */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Filter & Sort Programs
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Degree Type
+                  </label>
+                  <select
+                    value={filters.degreeType}
+                    onChange={(e) =>
+                      setFilters((prev) => ({ ...prev, degreeType: e.target.value }))
+                    }
+                    className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  >
+                    <option value="">All Types</option>
+                    <option value="bachelors">Bachelor&apos;s</option>
+                    <option value="masters">Master&apos;s</option>
+                    <option value="certificate">Certificate</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Country
+                  </label>
+                  <select
+                    value={filters.country}
+                    onChange={(e) =>
+                      setFilters((prev) => ({ ...prev, country: e.target.value }))
+                    }
+                    className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  >
+                    <option value="">All Countries</option>
+                    {locationOptions.countries.map((country) => (
+                      <option key={country} value={country}>
+                        {country}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    City
+                  </label>
+                  <select
+                    value={filters.city}
+                    onChange={(e) =>
+                      setFilters((prev) => ({ ...prev, city: e.target.value }))
+                    }
+                    className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  >
+                    <option value="">All Cities</option>
+                    {locationOptions.cities.map((city) => (
+                      <option key={city} value={city}>
+                        {city}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    State
+                  </label>
+                  <select
+                    value={filters.state}
+                    onChange={(e) =>
+                      setFilters((prev) => ({ ...prev, state: e.target.value }))
+                    }
+                    className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  >
+                    <option value="">All States</option>
+                    {locationOptions.states.map((state) => (
+                      <option key={state} value={state}>
+                        {state}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Cost
+                  </label>
+                  <select
+                    value={filters.cost}
+                    onChange={(e) =>
+                      setFilters((prev) => ({ ...prev, cost: e.target.value }))
+                    }
+                    className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  >
+                    <option value="">All Costs</option>
+                    <option value="Free">Free</option>
+                    <option value="$">Low Cost</option>
+                    <option value="$$">Medium Cost</option>
+                    <option value="$$$">High Cost</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Sort By
+                  </label>
+                  <select
+                    value={filters.sortBy}
+                    onChange={(e) =>
+                      setFilters((prev) => ({ ...prev, sortBy: e.target.value }))
+                    }
+                    className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  >
+                    <option value="created_at">Date Added</option>
+                    <option value="name">Name</option>
+                    <option value="university_name">University</option>
+                    <option value="degree_type">Degree Type</option>
+                    <option value="country">Country</option>
+                    <option value="visibility">Status</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Order
+                  </label>
+                  <select
+                    value={filters.sortOrder}
+                    onChange={(e) =>
+                      setFilters((prev) => ({ ...prev, sortOrder: e.target.value }))
+                    }
+                    className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  >
+                    <option value="desc">Descending</option>
+                    <option value="asc">Ascending</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="mt-4">
+                <button
+                  onClick={() =>
+                    setFilters({
+                      degreeType: '',
+                      country: '',
+                      city: '',
+                      state: '',
+                      cost: '',
+                      sortBy: 'created_at',
+                      sortOrder: 'desc',
+                    })
+                  }
+                  className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-md transition-colors"
+                >
+                  Clear Filters
+                </button>
+              </div>
+            </div>
+
             {!allPrograms || allPrograms.length === 0 ? (
               <div className="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-8 text-center">
                 <div className="text-gray-500 dark:text-gray-400 text-lg">
@@ -562,10 +759,10 @@ export default function AdminPage() {
                           {program.degree_type}
                         </span>
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                          {program.cost === 'Free' ? '🆓 Free' :
-                           program.cost === '$' ? '💰 $' :
-                           program.cost === '$$' ? '💰💰 $$' :
-                           program.cost === '$$$' ? '💰💰💰 $$$' :
+                          {program.cost === 'Free' ? 'Free' :
+                           program.cost === '$' ? 'Low Cost' :
+                           program.cost === '$$' ? 'Medium Cost' :
+                           program.cost === '$$$' ? 'High Cost' :
                            program.cost}
                         </span>
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(program.visibility)}`}>

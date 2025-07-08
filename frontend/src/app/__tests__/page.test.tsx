@@ -86,8 +86,8 @@ describe('Home Page', () => {
 
     await waitFor(() => {
       // Check that cost badges are displayed
-      expect(screen.getAllByText('💰💰💰 $$$').length).toBeGreaterThan(0); // Stanford, MIT, CMU
-      expect(screen.getAllByText('💰💰 $$').length).toBeGreaterThan(0); // Berkeley, Toronto
+      expect(screen.getAllByText('High Cost').length).toBeGreaterThan(0); // Stanford, MIT, CMU
+      expect(screen.getAllByText('Medium Cost').length).toBeGreaterThan(0); // Berkeley, Toronto
     });
   });
 

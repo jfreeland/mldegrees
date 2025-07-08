@@ -202,6 +202,57 @@ export default function GuidePage() {
             </div>
           </div>
         </section>
+
+        {/* Cost Categories Section */}
+        <section>
+          <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">
+            Understanding Program Costs
+          </h2>
+          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
+            <p className="text-gray-700 dark:text-gray-300 mb-4">
+              We categorize program costs to help you find options within your budget. These categories are approximate and can vary by location, program format, and other factors.
+            </p>
+            <div className="grid md:grid-cols-3 gap-4">
+              <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                <h3 className="text-lg font-medium text-green-600 dark:text-green-400 mb-2">
+                  Free
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  No tuition cost. Includes fully-funded programs, employer-sponsored education, and some online offerings.
+                </p>
+              </div>
+              <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                <h3 className="text-lg font-medium text-blue-600 dark:text-blue-400 mb-2">
+                  Low Cost
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Under $10,000 total program cost. Often includes community colleges, some state schools, and affordable online programs.
+                </p>
+              </div>
+              <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                <h3 className="text-lg font-medium text-orange-600 dark:text-orange-400 mb-2">
+                  Medium Cost
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  $10,000 - $30,000 total program cost. Includes many state universities and mid-tier private institutions.
+                </p>
+              </div>
+              <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                <h3 className="text-lg font-medium text-red-600 dark:text-red-400 mb-2">
+                  High Cost
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Over $30,000 total program cost. Typically includes prestigious private universities and specialized programs.
+                </p>
+              </div>
+            </div>
+            <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+              <p className="text-sm text-blue-800 dark:text-blue-200">
+                <strong>Note:</strong> These are rough estimates for total program costs. Always check with individual institutions for current tuition rates, fees, and available financial aid options. Costs can vary significantly based on residency status, program format (online vs. on-campus), and duration.
+              </p>
+            </div>
+          </div>
+        </section>
       </div>
     </div>
   );

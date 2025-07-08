@@ -13,6 +13,7 @@ interface Filters {
   country: string;
   city: string;
   state: string;
+  cost: string;
   sortBy: string;
   sortOrder: string;
 }
@@ -32,6 +33,7 @@ export default function Home() {
     country: "",
     city: "",
     state: "",
+    cost: "",
     sortBy: "rating",
     sortOrder: "desc",
   });
@@ -71,6 +73,7 @@ export default function Home() {
       if (filters.country) queryParams.append("country", filters.country);
       if (filters.city) queryParams.append("city", filters.city);
       if (filters.state) queryParams.append("state", filters.state);
+      if (filters.cost) queryParams.append("cost", filters.cost);
       if (filters.sortBy) queryParams.append("sort_by", filters.sortBy);
       if (filters.sortOrder)
         queryParams.append("sort_order", filters.sortOrder);
@@ -206,7 +209,7 @@ export default function Home() {
         if (uni.id === universityId) {
           return {
             ...uni,
-            user_rating: rating,
+            user_rating: rating === 0 ? undefined : rating,
           };
         }
         return uni;
@@ -398,7 +401,7 @@ export default function Home() {
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
           Filter & Sort
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Degree Type
@@ -408,7 +411,7 @@ export default function Home() {
               onChange={(e) =>
                 setFilters((prev) => ({ ...prev, degreeType: e.target.value }))
               }
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             >
               <option value="">All Types</option>
               <option value="bachelors">Bachelor&apos;s</option>
@@ -426,7 +429,7 @@ export default function Home() {
               onChange={(e) =>
                 setFilters((prev) => ({ ...prev, country: e.target.value }))
               }
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             >
               <option value="">All Countries</option>
               {locationOptions.countries.map((country) => (
@@ -446,7 +449,7 @@ export default function Home() {
               onChange={(e) =>
                 setFilters((prev) => ({ ...prev, city: e.target.value }))
               }
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             >
               <option value="">All Cities</option>
               {locationOptions.cities.map((city) => (
@@ -466,7 +469,7 @@ export default function Home() {
               onChange={(e) =>
                 setFilters((prev) => ({ ...prev, state: e.target.value }))
               }
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             >
               <option value="">All States</option>
               {locationOptions.states.map((state) => (
@@ -479,6 +482,25 @@ export default function Home() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Cost
+            </label>
+            <select
+              value={filters.cost}
+              onChange={(e) =>
+                setFilters((prev) => ({ ...prev, cost: e.target.value }))
+              }
+              className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            >
+              <option value="">All Costs</option>
+              <option value="Free">Free</option>
+              <option value="$">Low Cost</option>
+              <option value="$$">Medium Cost</option>
+              <option value="$$$">High Cost</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Sort By
             </label>
             <select
@@ -486,7 +508,7 @@ export default function Home() {
               onChange={(e) =>
                 setFilters((prev) => ({ ...prev, sortBy: e.target.value }))
               }
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             >
               <option value="rating">Rating</option>
               <option value="name">Name</option>
@@ -503,7 +525,7 @@ export default function Home() {
               onChange={(e) =>
                 setFilters((prev) => ({ ...prev, sortOrder: e.target.value }))
               }
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             >
               <option value="desc">Descending</option>
               <option value="asc">Ascending</option>
@@ -519,6 +541,7 @@ export default function Home() {
                 country: "",
                 city: "",
                 state: "",
+                cost: "",
                 sortBy: "rating",
                 sortOrder: "desc",
               })

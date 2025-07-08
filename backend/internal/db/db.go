@@ -98,6 +98,11 @@ func (db *DB) GetProgramsWithFilters(userID *int, filters *models.ProgramFilters
 			args = append(args, filters.State)
 			argIndex++
 		}
+		if filters.Cost != "" {
+			whereConditions = append(whereConditions, fmt.Sprintf("AND p.cost = $%d", argIndex))
+			args = append(args, filters.Cost)
+			argIndex++
+		}
 	}
 
 	// Add WHERE conditions to query
@@ -346,6 +351,15 @@ func (db *DB) Rate(userID, programID, rating int) error {
 	return nil
 }
 
+// RemoveRating removes a user's rating for a program
+func (db *DB) RemoveRating(userID, programID int) error {
+	_, err := db.Exec("DELETE FROM ratings WHERE user_id = $1 AND program_id = $2", userID, programID)
+	if err != nil {
+		return fmt.Errorf("removing rating: %w", err)
+	}
+	return nil
+}
+
 // CreateLocalUser creates a local user (for testing/admin purposes)
 func (db *DB) CreateLocalUser(email, name, role string) (*models.User, error) {
 	var user models.User
@@ -444,16 +458,109 @@ func (db *DB) UpdateProgramVisibility(programID int, visibility string) error {
 
 // GetAllPrograms retrieves all programs (for admin use)
 func (db *DB) GetAllPrograms() ([]models.Program, error) {
-	rows, err := db.Query(`
-		SELECT p.id, p.university_id, p.name, p.description, p.degree_type, p.country, p.city, p.state, p.url, p.cost, p.status, p.visibility, p.created_at, p.updated_at, u.name as university_name, COALESCE(AVG(r.rating), 0) as average_rating
+	return db.GetAllProgramsWithFilters(nil)
+}
+
+// GetAllProgramsWithFilters retrieves all programs with filtering (for admin use)
+func (db *DB) GetAllProgramsWithFilters(filters *models.ProgramFilters) ([]models.Program, error) {
+	baseQuery := `
+		SELECT
+			p.id,
+			p.university_id,
+			p.name,
+			p.description,
+			p.degree_type,
+			p.country,
+			p.city,
+			p.state,
+			p.url,
+			p.cost,
+			p.status,
+			p.visibility,
+			p.created_at,
+			p.updated_at,
+			u.name as university_name,
+			COALESCE(AVG(r.rating), 0) as average_rating
 		FROM programs p
 		JOIN universities u ON p.university_id = u.id
 		LEFT JOIN ratings r ON p.id = r.program_id
-		WHERE p.status = 'active'
-		GROUP BY p.id, p.university_id, p.name, p.description, p.degree_type, p.country, p.city, p.state, p.url, p.cost, p.status, p.visibility, p.created_at, p.updated_at, u.name
-		ORDER BY average_rating DESC, p.id`)
+		WHERE p.status = 'active'`
+
+	var whereConditions []string
+	var args []interface{}
+	argIndex := 1
+
+	// Add filtering conditions
+	if filters != nil {
+		if filters.DegreeType != "" {
+			whereConditions = append(whereConditions, fmt.Sprintf("AND p.degree_type = $%d", argIndex))
+			args = append(args, filters.DegreeType)
+			argIndex++
+		}
+		if filters.Country != "" {
+			whereConditions = append(whereConditions, fmt.Sprintf("AND p.country = $%d", argIndex))
+			args = append(args, filters.Country)
+			argIndex++
+		}
+		if filters.City != "" {
+			whereConditions = append(whereConditions, fmt.Sprintf("AND p.city = $%d", argIndex))
+			args = append(args, filters.City)
+			argIndex++
+		}
+		if filters.State != "" {
+			whereConditions = append(whereConditions, fmt.Sprintf("AND p.state = $%d", argIndex))
+			args = append(args, filters.State)
+			argIndex++
+		}
+		if filters.Cost != "" {
+			whereConditions = append(whereConditions, fmt.Sprintf("AND p.cost = $%d", argIndex))
+			args = append(args, filters.Cost)
+			argIndex++
+		}
+	}
+
+	// Add WHERE conditions to query
+	for _, condition := range whereConditions {
+		baseQuery += " " + condition
+	}
+
+	// Add GROUP BY
+	baseQuery += `
+		GROUP BY p.id, p.university_id, p.name, p.description, p.degree_type, p.country, p.city, p.state, p.url, p.cost, p.status, p.visibility, p.created_at, p.updated_at, u.name`
+
+	// Add ORDER BY
+	orderBy := "p.created_at DESC, p.id"
+	if filters != nil && filters.SortBy != "" {
+		switch filters.SortBy {
+		case "name":
+			orderBy = "p.name"
+		case "university_name":
+			orderBy = "u.name"
+		case "degree_type":
+			orderBy = "p.degree_type"
+		case "country":
+			orderBy = "p.country"
+		case "visibility":
+			orderBy = "p.visibility"
+		case "created_at":
+			orderBy = "p.created_at"
+		default:
+			orderBy = "p.created_at"
+		}
+
+		if filters.SortOrder == "asc" {
+			orderBy += " ASC"
+		} else {
+			orderBy += " DESC"
+		}
+		orderBy += ", p.id"
+	}
+
+	baseQuery += " ORDER BY " + orderBy
+
+	rows, err := db.Query(baseQuery, args...)
 	if err != nil {
-		return nil, fmt.Errorf("querying all programs: %w", err)
+		return nil, fmt.Errorf("querying all programs with filters: %w", err)
 	}
 	defer rows.Close()
 

@@ -39,12 +39,22 @@ export default function UniversityCard({
     }
   };
 
+  const handleRemoveRating = async () => {
+    if (isRating || !onRate) return;
+    setIsRating(true);
+    try {
+      onRate(university.id, 0); // 0 indicates remove rating
+    } finally {
+      setIsRating(false);
+    }
+  };
+
   const getCostDisplay = (cost: string) => {
     switch (cost) {
-      case 'Free': return '🆓 Free';
-      case '$': return '💰 $';
-      case '$$': return '💰💰 $$';
-      case '$$$': return '💰💰💰 $$$';
+      case 'Free': return 'Free';
+      case '$': return 'Low Cost';
+      case '$$': return 'Medium Cost';
+      case '$$$': return 'High Cost';
       default: return cost;
     }
   };
@@ -93,6 +103,15 @@ export default function UniversityCard({
             <div className="flex space-x-1">
               {renderStars()}
             </div>
+            {university.user_rating && (
+              <button
+                onClick={handleRemoveRating}
+                disabled={isRating}
+                className="text-xs text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-50 mt-1"
+              >
+                Remove Rating
+              </button>
+            )}
           </div>
         )}
       </div>

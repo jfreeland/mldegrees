@@ -33,8 +33,8 @@ func HandlePrograms(database *db.DB) http.HandlerFunc {
 			Country:    r.URL.Query().Get("country"),
 			City:       r.URL.Query().Get("city"),
 			State:      r.URL.Query().Get("state"),
-			SortBy:     r.URL.Query().Get("sort_by"),
-			SortOrder:  r.URL.Query().Get("sort_order"),
+			Cost:       r.URL.Query().Get("cost"),
+			SortBy:     r.URL.Query().Get("sort_by"), SortOrder: r.URL.Query().Get("sort_order"),
 		}
 
 		// Get programs with filters
@@ -134,19 +134,27 @@ func HandleProgramRate(database *db.DB) http.HandlerFunc {
 			return
 		}
 
-		// Validate rating value
-		if req.Rating < 1 || req.Rating > 5 {
-			http.Error(w, "Invalid rating value. Must be between 1 and 5", http.StatusBadRequest)
+		// Validate rating value (0 means remove rating)
+		if req.Rating < 0 || req.Rating > 5 {
+			http.Error(w, "Invalid rating value. Must be between 0 and 5 (0 to remove rating)", http.StatusBadRequest)
 			return
 		}
 
-		// Create or update rating
-		if err := database.Rate(user.ID, programID, req.Rating); err != nil {
-			log.Printf("Error rating for user %d, program %d, rating %d: %v", user.ID, programID, req.Rating, err)
-			http.Error(w, "Failed to rate", http.StatusInternalServerError)
-			return
+		// Handle rating removal
+		if req.Rating == 0 {
+			if err := database.RemoveRating(user.ID, programID); err != nil {
+				log.Printf("Error removing rating for user %d, program %d: %v", user.ID, programID, err)
+				http.Error(w, "Failed to remove rating", http.StatusInternalServerError)
+				return
+			}
+		} else {
+			// Create or update rating
+			if err := database.Rate(user.ID, programID, req.Rating); err != nil {
+				log.Printf("Error rating for user %d, program %d, rating %d: %v", user.ID, programID, req.Rating, err)
+				http.Error(w, "Failed to rate", http.StatusInternalServerError)
+				return
+			}
 		}
-
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]string{"status": "success"})
 	}
@@ -342,9 +350,20 @@ func HandleAdminAllPrograms(database *db.DB) http.HandlerFunc {
 			return
 		}
 
-		programs, err := database.GetAllPrograms()
+		// Parse query parameters for filtering
+		filters := &models.ProgramFilters{
+			DegreeType: r.URL.Query().Get("degree_type"),
+			Country:    r.URL.Query().Get("country"),
+			City:       r.URL.Query().Get("city"),
+			State:      r.URL.Query().Get("state"),
+			Cost:       r.URL.Query().Get("cost"),
+			SortBy:     r.URL.Query().Get("sort_by"),
+			SortOrder:  r.URL.Query().Get("sort_order"),
+		}
+
+		programs, err := database.GetAllProgramsWithFilters(filters)
 		if err != nil {
-			log.Printf("Error getting all programs: %v", err)
+			log.Printf("Error getting all programs with filters: %v", err)
 			http.Error(w, "Failed to get programs", http.StatusInternalServerError)
 			return
 		}

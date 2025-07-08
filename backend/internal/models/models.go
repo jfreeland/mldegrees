@@ -75,6 +75,7 @@ type ProgramFilters struct {
 	Country    string `json:"country"`
 	City       string `json:"city"`
 	State      string `json:"state"`
+	Cost       string `json:"cost"`
 	SortBy     string `json:"sort_by"`    // "rating", "name", "created_at"
 	SortOrder  string `json:"sort_order"` // "asc", "desc"
 }

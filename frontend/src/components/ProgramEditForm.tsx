@@ -197,9 +197,9 @@ export default function ProgramEditForm({ program, onSave, onCancel }: ProgramEd
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
                   <option value="Free">Free</option>
-                  <option value="$">$ (Under $10k)</option>
-                  <option value="$$">$$ ($10k-$30k)</option>
-                  <option value="$$$">$$$ (Over $30k)</option>
+                  <option value="$">Low Cost</option>
+                  <option value="$$">Medium Cost</option>
+                  <option value="$$$">High Cost</option>
                 </select>
               </div>
             </div>
