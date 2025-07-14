@@ -15,6 +15,7 @@ export function middleware(request: NextRequest) {
       hostname === 'www.machinelearningdegrees.com') {
     const redirectUrl = new URL(request.url);
     redirectUrl.hostname = 'mldegrees.com';
+    redirectUrl.port = '';
     return NextResponse.redirect(redirectUrl, 301);
   }
 

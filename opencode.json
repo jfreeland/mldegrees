@@ -20,5 +20,16 @@
             "environment": {},
             "type": "local"
         }
+    },
+    "provider": {
+        "moonshot": {
+            "models": {
+                "kimi-k2-0711-preview": {}
+            },
+            "npm": "@ai-sdk/openai-compatible",
+            "options": {
+                "baseURL": "https://api.moonshot.ai/v1"
+            }
+        }
     }
 }
