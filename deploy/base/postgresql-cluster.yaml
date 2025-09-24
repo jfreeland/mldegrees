@@ -5,7 +5,8 @@ metadata:
   name: mld-db
   namespace: mld
   finalizers:
-    - do-not-delete
+    []
+    #- do-not-delete
 spec:
   instances: 2
   superuserSecret:
