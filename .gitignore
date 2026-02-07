@@ -48,4 +48,5 @@ next-env.d.ts
 tools/screenshots
 tools/*.json
 
-supabase
+# Supabase local development (root directory only)
+/supabase/.temp/
