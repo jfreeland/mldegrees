@@ -11,6 +11,9 @@ export const mockPrograms: Program[] = [
     city: "Stanford",
     state: "CA",
     cost: "$$$",
+    valueRating: "good",
+    format: "on-campus",
+    featured: false,
   },
   {
     id: "2",
@@ -22,6 +25,9 @@ export const mockPrograms: Program[] = [
     city: "Cambridge",
     state: "MA",
     cost: "$$$",
+    valueRating: "good",
+    format: "on-campus",
+    featured: false,
   },
   {
     id: "3",
@@ -33,6 +39,9 @@ export const mockPrograms: Program[] = [
     city: "Pittsburgh",
     state: "PA",
     cost: "$$$",
+    valueRating: "good",
+    format: "on-campus",
+    featured: false,
   },
   {
     id: "4",
@@ -44,6 +53,9 @@ export const mockPrograms: Program[] = [
     city: "Berkeley",
     state: "CA",
     cost: "$$",
+    valueRating: "excellent",
+    format: "on-campus",
+    featured: false,
   },
   {
     id: "5",
@@ -55,5 +67,8 @@ export const mockPrograms: Program[] = [
     city: "Toronto",
     state: "ON",
     cost: "$$",
+    valueRating: "excellent",
+    format: "on-campus",
+    featured: false,
   }
 ];

@@ -52,3 +52,5 @@ tools/*.json
 /supabase/.temp/
 
 TASK.md
+docs/program-sources.txt
+tmp/

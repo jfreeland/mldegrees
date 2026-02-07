@@ -253,6 +253,60 @@ export default function GuidePage() {
             </div>
           </div>
         </section>
+
+        {/* Value Rating Section */}
+        <section>
+          <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">
+            Our Value Ratings
+          </h2>
+          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
+            <p className="text-gray-700 dark:text-gray-300 mb-4">
+              We assign each program a value rating based on the relationship between cost, university reputation, and program type. This is meant to help you quickly identify programs that offer the best return on investment — not to rank programs by quality.
+            </p>
+            <div className="grid md:grid-cols-3 gap-4 mb-4">
+              <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                <h3 className="text-lg font-medium text-green-600 dark:text-green-400 mb-2">
+                  ⭐ Excellent
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Outstanding cost-to-quality ratio. Includes funded PhDs, low-cost programs at top-ranked universities, and affordable professional certificates from major tech companies.
+                </p>
+              </div>
+              <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                <h3 className="text-lg font-medium text-blue-600 dark:text-blue-400 mb-2">
+                  👍 Good
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Reasonable cost for the education provided. Includes mid-cost programs at strong universities and higher-cost programs at elite institutions where the brand carries significant career value.
+                </p>
+              </div>
+              <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                <h3 className="text-lg font-medium text-yellow-600 dark:text-yellow-400 mb-2">
+                  📊 Fair
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Higher cost relative to comparable alternatives. The program may still be excellent, but similar education may be available at a lower price point elsewhere.
+                </p>
+              </div>
+            </div>
+            <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4">
+              <h4 className="font-medium text-gray-900 dark:text-white mb-2">How We Calculate Value</h4>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                Our value ratings are based on a heuristic that considers:
+              </p>
+              <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                <li>• <strong>Cost tier:</strong> Free and low-cost programs score higher</li>
+                <li>• <strong>University reputation:</strong> Top-ranked institutions in global CS/AI rankings</li>
+                <li>• <strong>Program type:</strong> Funded PhDs are always excellent value; certificates from major tech companies offer practical skills at low cost</li>
+              </ul>
+            </div>
+            <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+              <p className="text-sm text-blue-800 dark:text-blue-200">
+                <strong>Disclaimer:</strong> Value ratings are estimates based on publicly available information and should not be the sole factor in your decision. A &quot;fair&quot; value program may still be the best choice for your specific career goals, network, or learning style.
+              </p>
+            </div>
+          </div>
+        </section>
       </div>
     </div>
   );

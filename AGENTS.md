@@ -57,7 +57,7 @@ supabase db push                                   # Push migrations
 - `universities` - id, name
 - `programs` - id, university_id (FK), name, description, degree_type, country, city, state, url, cost, status, visibility
 
-Programs with `status='active'` and `visibility='approved'` appear on the site.
+Programs with `status='active'` appear on the site.
 
 ## Code Standards
 
@@ -77,6 +77,14 @@ NEXT_PUBLIC_SUPABASE_URL=https://erwcyrrgynkoukkxaqtr.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-key
 NEXT_PUBLIC_ADSENSE_CLIENT_ID=ca-pub-0235813604527888
 ```
+
+## Temporary Files
+
+Write temporary files (SQL scripts, scratch data, etc.) to the `tmp/` directory in the project root. It is gitignored. **Do not use `/tmp`** — it requires elevated permissions and files there are not visible to other agents or the user.
+
+## Tracked Sources
+
+`docs/program-sources.txt` tracks all sources already used to find programs. Check it before scraping to avoid duplicate work. Update it after adding new programs.
 
 ## Workflow
 

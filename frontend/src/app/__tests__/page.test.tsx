@@ -41,19 +41,11 @@ describe('ProgramCard', () => {
     expect(screen.getByText('Medium Cost')).toBeInTheDocument();
   });
 
-  it('renders external link when URL is provided', () => {
-    const programWithUrl = { ...mockPrograms[0], url: 'https://example.com/program' };
-    render(<ProgramCard program={programWithUrl} />);
+  it('links to the program detail page', () => {
+    const program = mockPrograms[0];
+    render(<ProgramCard program={program} />);
 
-    const link = screen.getByRole('link', { name: /visit program page/i });
-    expect(link).toHaveAttribute('href', 'https://example.com/program');
-    expect(link).toHaveAttribute('target', '_blank');
-  });
-
-  it('does not render external link when URL is not provided', () => {
-    const programWithoutUrl = { ...mockPrograms[0], url: undefined };
-    render(<ProgramCard program={programWithoutUrl} />);
-
-    expect(screen.queryByRole('link', { name: /visit program page/i })).not.toBeInTheDocument();
+    const link = screen.getByRole('link');
+    expect(link).toHaveAttribute('href', '/stanford-university/ms-in-computer-science-ai-track');
   });
 });

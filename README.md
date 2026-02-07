@@ -128,6 +128,5 @@ Programs are stored in Supabase. To add new programs:
 1. Go to [Supabase Dashboard](https://app.supabase.com/) → your project → Table
    Editor
 2. Add university to `universities` table (if new)
-3. Add program to `programs` table with `status: 'active'` and
-   `visibility: 'approved'`
+3. Add program to `programs` table with `status: 'active'`
 4. Rebuild and deploy: `make deploy`
