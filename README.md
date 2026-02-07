@@ -1,57 +1,133 @@
 # Machine Learning Degrees Website
 
-A website for [machinelearningdegrees.com](https://machinelearningdegrees.com)
-and [mldegrees.com](https://mldegrees.com) that helps people learn about machine
-learning degrees and find top programs. Theoretically.
-
-Mostly just a playground for me to have an app to play with to tinker with LLM's
-and infrastructure and observability things I care about.
-
-This runs on my homelab cluster in <https://github.com/jfreeland/flux> and uses
-helm charts from <https://github.com/jfreeland/helm>.
-
-Most of the code in `backend` and `frontend` has been completely AI generated
-with `claude-sonnet-4` and `gemini-2.5-pro`. I've not reviewed most of it. I've
-written requirements in `REQUIREMENTS.md` and move completed requirements to
-`docs/COMPELTED.md`. I don't know if that's the best practice.
+A static website for [mldegrees.com](https://mldegrees.com) and
+[machinelearningdegrees.com](https://machinelearningdegrees.com) that helps
+people discover machine learning degree programs worldwide.
 
 ## Architecture
 
-![Diagram](docs/diagram.png)
+- **Frontend**: Next.js static site deployed to Cloudflare Pages
+- **Database**: Supabase (PostgreSQL) for program data
+- **Ads**: Google AdSense integration
+
+The site is statically generated at build time, fetching program data from
+Supabase and generating HTML files served via Cloudflare's global CDN.
 
 ## Project Structure
 
-- `frontend`: Next.js frontend application
-- `backend`: Go backend API
-- `deploy`: manifests for various deployment related activities
+```text
+├── frontend/           # Next.js static site
+│   ├── src/
+│   │   ├── app/        # App router pages
+│   │   ├── components/ # React components
+│   │   ├── lib/        # Supabase client
+│   │   └── types/      # TypeScript types
+│   └── public/         # Static assets (ads.txt, sitemap.xml, etc.)
+├── supabase/           # Database configuration
+└── .github/workflows/  # CI (tests only)
+```
+
+## Prerequisites
+
+- Node.js 20+
+- [Supabase CLI](https://supabase.com/docs/guides/cli) - for database management
+- [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/) - for
+  deployment
 
 ## Getting Started
 
-### Database
+### 1. Install Dependencies
 
 ```bash
-make dev-db-up
+cd frontend
+npm install
 ```
 
-### Frontend
+### 2. Configure Environment
+
+Create `frontend/.env.local`:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+NEXT_PUBLIC_ADSENSE_CLIENT_ID=ca-pub-XXXXXXXXXXXXXXXX  # Optional
+```
+
+### 3. Development
 
 ```bash
-make dev-frontend
+make dev
+# or: cd frontend && npm run dev
 ```
 
-The frontend will be available at
-[http://localhost:3000](http://localhost:3000).
+The site will be available at <http://localhost:3000>.
 
-### Backend
+## Deployment
+
+Deploy to Cloudflare Pages using Wrangler:
 
 ```bash
-make dev-backend
+make deploy
+# or: cd frontend && npm run build && wrangler pages deploy out --project-name=mldegrees
 ```
 
-The API will be available at
-[http://localhost:8080/api](http://localhost:8080/api).
+### First-Time Setup
 
-## TODO
+1. Authenticate Wrangler: `wrangler login`
+2. Create the project:
+   `wrangler pages project create mldegrees --production-branch main`
+3. Deploy: `make deploy`
+4. Add custom domains in Cloudflare Dashboard → Pages → mldegrees → Custom
+   domains
 
-- Move to "Value for Money" ratings, include cost
-- Add things like open university, edx
+## Database Management
+
+Use Supabase CLI to manage the database:
+
+```bash
+# Link to your project
+supabase link --project-ref your-project-ref
+
+# View database schema
+supabase db dump --schema public
+
+# Run migrations
+supabase db push
+```
+
+### Database Schema
+
+- `universities` - University names (id, name)
+- `programs` - Degree programs (id, university_id, name, description,
+  degree_type, country, city, state, url, cost, status, visibility)
+
+## Available Commands
+
+| Command          | Description                          |
+| ---------------- | ------------------------------------ |
+| `make dev`       | Start development server             |
+| `make build`     | Build static site to `frontend/out/` |
+| `make test`      | Run tests                            |
+| `make lint`      | Run linter                           |
+| `make typecheck` | Run TypeScript type checking         |
+| `make deploy`    | Build and deploy to Cloudflare Pages |
+| `make serve`     | Serve built site locally             |
+| `make clean`     | Remove build artifacts               |
+
+## AdSense Setup
+
+1. Sign up for [Google AdSense](https://www.google.com/adsense/)
+2. Add your publisher ID to `NEXT_PUBLIC_ADSENSE_CLIENT_ID` env var
+3. Verify `frontend/public/ads.txt` contains your publisher ID
+4. Configure ad slots in the AdSense dashboard
+
+## Adding Programs
+
+Programs are stored in Supabase. To add new programs:
+
+1. Go to [Supabase Dashboard](https://app.supabase.com/) → your project → Table
+   Editor
+2. Add university to `universities` table (if new)
+3. Add program to `programs` table with `status: 'active'` and
+   `visibility: 'approved'`
+4. Rebuild and deploy: `make deploy`

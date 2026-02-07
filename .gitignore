@@ -44,8 +44,8 @@ next-env.d.ts
 
 .vscode
 
-# app
-
-backend/bin
+# tools
 tools/screenshots
 tools/*.json
+
+supabase

@@ -6,30 +6,15 @@ repos:
     rev: v5.0.0
     hooks:
       - id: trailing-whitespace
-        exclude: |
-          (?x)^(
-              ^.*/terraform.tfstate$|
-              ^.*/terraform.tfstate.*.backup$|
-          )$
       - id: end-of-file-fixer
-        exclude: |
-          (?x)^(
-              ^.*/terraform.tfstate$|
-              ^.*/terraform.tfstate.*.backup$|
-          )$
       - id: check-yaml
         args:
           - --allow-multiple-documents
-      # The json format/linter/fixer does not like:
       - id: check-json
       - id: pretty-format-json
         args:
           - --autofix
-          # Note: this hook does not honor the .editorconfig value so
-          #   they need to be kept in sync manually
           - --indent=4
-          # Do not convert extended unicode characters to escape sequences. This preserves human-readable characters.
-          # e.g. 🤖 -> \ud83e\udd16
           - --no-ensure-ascii
 
   # Call out any markdown issues w/ the rendered docs
@@ -38,25 +23,15 @@ repos:
     hooks:
       - id: markdownlint
         args:
-          # Automatically fix what can be fixed (usually formatting/whitespace issues)
           - --fix
-
-  # And check that we're not doing anything too dumb in GHA flows
-  #- repo: https://github.com/woodruffw/zizmor-pre-commit
-  #  # Zizmor version.
-  #  rev: v1.9.0
-  #  hooks:
-  #    # Run the linter.
-  #    - id: zizmor
 
   # Local hooks for project-specific checks
   - repo: local
     hooks:
-      # Test that Docker images can be built successfully
-      - id: test-docker-builds
-        name: Test Docker builds
-        entry: make test-docker-builds
+      - id: frontend-tests
+        name: Frontend tests
+        entry: bash -c 'cd frontend && npm test'
         language: system
-        files: ^(frontend/.*|backend/.*|.*Dockerfile.*|.*\.dockerignore)$
+        files: ^frontend/.*\.(ts|tsx)$
         pass_filenames: false
         stages: [pre-commit]

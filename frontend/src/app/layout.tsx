@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Titlebar from "@/components/Titlebar";
-import AuthProvider from "@/components/AuthProvider";
-import MetricsProvider from "@/components/MetricsProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -92,17 +91,25 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const adsenseClientId = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID;
+
   return (
     <html lang="en">
+      <head>
+        {adsenseClientId && (
+          <Script
+            async
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClientId}`}
+            crossOrigin="anonymous"
+            strategy="afterInteractive"
+          />
+        )}
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AuthProvider>
-          <MetricsProvider>
-            <Titlebar />
-            <main className="min-h-screen">{children}</main>
-          </MetricsProvider>
-        </AuthProvider>
+        <Titlebar />
+        <main className="min-h-screen">{children}</main>
       </body>
     </html>
   );

@@ -1,10 +1,10 @@
-import { University } from "@/types/university";
+import { Program } from "@/types/program";
 
 interface StructuredDataProps {
-  universities: University[];
+  programs: Program[];
 }
 
-export default function StructuredData({ universities }: StructuredDataProps) {
+export default function StructuredData({ programs }: StructuredDataProps) {
   const generateStructuredData = () => {
     const organizationData = {
       "@context": "https://schema.org",
@@ -23,32 +23,23 @@ export default function StructuredData({ universities }: StructuredDataProps) {
       },
     };
 
-    const coursesData = universities.slice(0, 10).map((university) => ({
+    const coursesData = programs.slice(0, 10).map((program) => ({
       "@context": "https://schema.org",
       "@type": "Course",
-      name: university.programName,
-      description: university.description,
+      name: program.name,
+      description: program.description,
       provider: {
         "@type": "EducationalOrganization",
-        name: university.name,
+        name: program.universityName,
         address: {
           "@type": "PostalAddress",
-          addressLocality: university.city,
-          addressRegion: university.state,
-          addressCountry: university.country,
+          addressLocality: program.city,
+          addressRegion: program.state,
+          addressCountry: program.country,
         },
       },
-      educationalCredentialAwarded: university.degreeType,
-      url: university.url,
-      aggregateRating: university.average_rating
-        ? {
-            "@type": "AggregateRating",
-            ratingValue: university.average_rating,
-            ratingCount: 1,
-            bestRating: 5,
-            worstRating: 1,
-          }
-        : undefined,
+      educationalCredentialAwarded: program.degreeType,
+      url: program.url,
     }));
 
     return {

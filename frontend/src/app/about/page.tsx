@@ -2,15 +2,15 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: "About ML Degrees",
-  description: "Learn about ML Degrees platform, our mission to help students find the best machine learning programs, privacy policy, and how our community-driven rating system works.",
+  description: "Learn about ML Degrees platform, our mission to help students find the best machine learning programs, privacy policy, and how to use our comprehensive program database.",
   openGraph: {
-    title: "About ML Degrees - Community-Driven ML Program Reviews",
-    description: "Learn about our mission to help students find the best machine learning programs through community-driven ratings and reviews.",
+    title: "About ML Degrees - Comprehensive ML Program Directory",
+    description: "Learn about our mission to help students find the best machine learning programs from universities worldwide.",
     url: "https://mldegrees.com/about",
   },
   twitter: {
-    title: "About ML Degrees - Community-Driven ML Program Reviews",
-    description: "Learn about our mission to help students find the best machine learning programs through community-driven ratings and reviews.",
+    title: "About ML Degrees - Comprehensive ML Program Directory",
+    description: "Learn about our mission to help students find the best machine learning programs from universities worldwide.",
   },
   alternates: {
     canonical: "https://mldegrees.com/about",
@@ -30,21 +30,46 @@ export default function AboutPage() {
             Our Mission
           </h2>
           <p className="text-gray-600 dark:text-gray-300 mb-4">
-            Machine Learning Degrees helps prospective students find the best
-            Machine Learning and AI graduate programs by providing
-            community-driven ratings. Our platform allows users to vote on
-            programs they have experience with, helping others make informed
-            decisions about their education.
+            Machine Learning Degrees is a comprehensive directory of machine learning
+            and AI degree programs from universities worldwide. We help prospective
+            students discover and compare programs to find the right educational path
+            for their career in artificial intelligence.
           </p>
         </section>
 
         <section className="mb-8">
           <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">
-            Ideas
+            What We Offer
+          </h2>
+          <ul className="list-disc pl-6 text-gray-600 dark:text-gray-300 space-y-2">
+            <li>
+              <strong>Program Directory:</strong> Browse machine learning degrees from
+              universities around the world.
+            </li>
+            <li>
+              <strong>Cost Information:</strong> Understand the investment required for
+              different programs.
+            </li>
+            <li>
+              <strong>Degree Types:</strong> Find Bachelor&apos;s, Master&apos;s, and
+              Certificate programs.
+            </li>
+            <li>
+              <strong>Location Data:</strong> Discover programs by country, state, or city.
+            </li>
+          </ul>
+        </section>
+
+        <section className="mb-8">
+          <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">
+            Ideas & Feedback
           </h2>
           <p className="text-gray-600 dark:text-gray-300 mb-4">
-            Have an idea for how to make this site more useful? Let us know at
-            <a href="mailto:contact@mldegrees.com">contact@mldegrees.com</a>.
+            Have an idea for how to make this site more useful? Know of a program we
+            should add? Let us know at{' '}
+            <a href="mailto:contact@mldegrees.com" className="text-blue-600 dark:text-blue-400 hover:underline">
+              contact@mldegrees.com
+            </a>.
           </p>
         </section>
 
@@ -53,43 +78,19 @@ export default function AboutPage() {
             Privacy Policy
           </h2>
           <p className="text-gray-600 dark:text-gray-300 mb-4">
-            We take your privacy seriously. Here&apos;s what you need to know:
+            We take your privacy seriously:
           </p>
           <ul className="list-disc pl-6 text-gray-600 dark:text-gray-300 space-y-2">
             <li>
-              <strong>Minimal Data Collection:</strong> We only collect your
-              email address and name when you sign in. We do not store or access
-              any other personal information.
+              <strong>No Account Required:</strong> Browse all programs without signing up.
             </li>
             <li>
-              <strong>No Data Sharing:</strong> We do not sell, trade, or share
-              your personal information with third parties.
+              <strong>Minimal Tracking:</strong> We use basic analytics to improve the site.
             </li>
             <li>
-              <strong>Voting Privacy:</strong> Your individual votes are
-              private. We only display aggregate ratings for each program.
-            </li>
-            <li>
-              <strong>Data Usage:</strong> Your email is used solely for
-              authentication purposes and to prevent duplicate voting.
-            </li>
-            <li>
-              <strong>Data Deletion:</strong> You can request deletion of your
-              account and all associated data at any time by contacting us.
+              <strong>No Data Selling:</strong> We do not sell or share your information.
             </li>
           </ul>
-        </section>
-
-        <section className="mb-8">
-          <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">
-            How It Works
-          </h2>
-          <p className="text-gray-600 dark:text-gray-300 mb-4">
-            Sign in with your Google account to vote on ML degree programs. Each
-            user can vote once per program, either upvoting (+1) or downvoting
-            (-1) based on their experience or knowledge of the program. The
-            aggregate score helps other users identify highly-regarded programs.
-          </p>
         </section>
 
         <section>
@@ -97,9 +98,10 @@ export default function AboutPage() {
             Contact
           </h2>
           <p className="text-gray-600 dark:text-gray-300">
-            If you have any questions about our privacy practices or would like
-            to request data deletion, please contact us at
-            <a href="mailto:contact@mldegrees.com">contact@mldegrees.com</a>.
+            Questions or suggestions? Contact us at{' '}
+            <a href="mailto:contact@mldegrees.com" className="text-blue-600 dark:text-blue-400 hover:underline">
+              contact@mldegrees.com
+            </a>.
           </p>
         </section>
       </div>
